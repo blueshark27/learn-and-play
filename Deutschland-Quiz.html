@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deutschland-Quiz</title>
+<style>
+  :root {
+    --bg: #f3f6fb; --card: #fff; --ink: #1f2a37; --muted: #5b6676;
+    --line: #dde3ec; --accent: #2f6fde; --ok: #1f9d55; --ok-bg: #e5f6ec;
+    --bad: #d64545; --bad-bg: #fdeaea; --hint-bg: #fff6dc;
+    --c-fluss: #2f80d1; --c-stadt: #c2571a; --c-land: #2e9a5d; --c-gebirge: #7a5bc4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.45;
+  }
+  main { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .card {
+    background: var(--card); border-radius: 16px; padding: 22px;
+    box-shadow: 0 2px 10px rgba(20,40,80,.07); border: 1px solid var(--line);
+  }
+  .hidden { display: none !important; }
+  .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px; }
+  .cat {
+    border: 2px solid var(--line); border-radius: 12px; padding: 12px; cursor: pointer;
+    background: #fff; font-size: 1rem; text-align: left; display: flex; gap: 10px; align-items: center;
+    color: var(--ink);
+  }
+  .cat .emo { font-size: 1.6rem; }
+  .cat small { display: block; color: var(--muted); }
+  .cat.on { border-color: var(--accent); background: #eef4ff; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  label.chk { display: flex; gap: 8px; align-items: center; color: var(--muted); margin-bottom: 16px; cursor: pointer; }
+  button.btn {
+    font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 12px 18px;
+    background: var(--accent); color: #fff; cursor: pointer;
+  }
+  button.btn.sec { background: #e8edf5; color: var(--ink); }
+  button.btn:disabled { opacity: .45; cursor: default; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: .95rem; color: var(--muted); }
+  .bar { height: 8px; background: #e5eaf2; border-radius: 99px; overflow: hidden; margin-bottom: 18px; }
+  .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .tag { display: inline-block; font-size: .8rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; color: #fff; }
+  .q { font-size: 1.3rem; font-weight: 650; margin: 12px 0 18px; }
+  .opts { display: grid; gap: 10px; }
+  .opt {
+    font: inherit; text-align: left; padding: 14px 16px; border-radius: 12px; border: 2px solid var(--line);
+    background: #fff; cursor: pointer; color: var(--ink); display: flex; gap: 12px; align-items: center;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .k { width: 28px; height: 28px; border-radius: 50%; background: #eef1f6; display: grid; place-items: center; font-weight: 700; flex: none; }
+  .opt.ok { border-color: var(--ok); background: var(--ok-bg); }
+  .opt.bad { border-color: var(--bad); background: var(--bad-bg); }
+  .opt:disabled { cursor: default; }
+  .hint { background: var(--hint-bg); border-radius: 10px; padding: 10px 14px; margin-top: 14px; }
+  .fb { border-radius: 10px; padding: 12px 14px; margin-top: 16px; }
+  .fb.ok { background: var(--ok-bg); }
+  .fb.bad { background: var(--bad-bg); }
+  .fb b { display: block; margin-bottom: 2px; }
+  .actions { display: flex; justify-content: space-between; margin-top: 18px; gap: 10px; }
+  .big { font-size: 3rem; font-weight: 800; margin: 6px 0; }
+  .res { width: 100%; border-collapse: collapse; margin: 14px 0; }
+  .res td { padding: 8px 4px; border-bottom: 1px solid var(--line); }
+  .res td:last-child { text-align: right; font-weight: 700; }
+  .wrong { margin-top: 10px; }
+  .wrong li { margin-bottom: 8px; }
+  .wrong .a { color: var(--ok); font-weight: 600; }
+  @media (max-width: 480px) { .cats { grid-template-columns: 1fr; } .q { font-size: 1.15rem; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>🇩🇪 Deutschland-Quiz</h1>
+  <p class="sub">Flüsse, Städte, Bundesländer und Gebirge</p>
+
+  <!-- Start -->
+  <section id="start" class="card">
+    <strong>Was möchtest du üben?</strong>
+    <div class="cats" id="cats"></div>
+    <label class="chk"><input type="checkbox" id="shuffle" checked> Fragen und Antworten mischen</label>
+    <button class="btn" id="go">Los geht's!</button>
+  </section>
+
+  <!-- Quiz -->
+  <section id="quiz" class="card hidden">
+    <div class="top"><span id="count"></span><span id="score"></span></div>
+    <div class="bar"><div id="prog"></div></div>
+    <span class="tag" id="tag"></span>
+    <div class="q" id="question"></div>
+    <div class="opts" id="opts"></div>
+    <div class="hint hidden" id="hint"></div>
+    <div class="fb hidden" id="fb"></div>
+    <div class="actions">
+      <button class="btn sec" id="hintBtn">💡 Tipp</button>
+      <button class="btn" id="next" disabled>Weiter →</button>
+    </div>
+  </section>
+
+  <!-- Ergebnis -->
+  <section id="result" class="card hidden">
+    <strong>Geschafft!</strong>
+    <div class="big" id="final"></div>
+    <div id="praise"></div>
+    <table class="res" id="perCat"></table>
+    <div id="wrongBox"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn" id="retryWrong">Falsche Fragen wiederholen</button>
+      <button class="btn sec" id="restart">Neues Quiz</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const CATS = {
+  fluss:   { name: "Flüsse",       emo: "🌊", color: "var(--c-fluss)" },
+  stadt:   { name: "Städte",       emo: "🏙️", color: "var(--c-stadt)" },
+  land:    { name: "Bundesländer", emo: "🗺️", color: "var(--c-land)" },
+  gebirge: { name: "Gebirge",      emo: "⛰️", color: "var(--c-gebirge)" }
+};
+
+// a = Antworten, c = Index der richtigen Antwort
+const QUESTIONS = [
+  // Flüsse
+  { cat:"fluss", q:"Welcher Fluss hat die längste Strecke in Deutschland?", a:["Rhein","Elbe","Donau","Main"], c:0,
+    hint:"Er fließt durch Köln, Bonn und Koblenz.",
+    exp:"Der Rhein fließt rund 865 km durch Deutschland. Die Donau ist insgesamt länger, aber ihr größter Teil liegt in anderen Ländern." },
+  { cat:"fluss", q:"An welchem Fluss liegt Hamburg?", a:["Weser","Elbe","Oder","Rhein"], c:1,
+    hint:"Der Fluss mündet bei Cuxhaven in die Nordsee.",
+    exp:"Hamburg liegt an der Elbe. Über die Elbe kommen die großen Schiffe in den Hamburger Hafen." },
+  { cat:"fluss", q:"In welcher Stadt fließt die Mosel in den Rhein (am „Deutschen Eck“)?", a:["Mainz","Trier","Koblenz","Bonn"], c:2,
+    hint:"Die Stadt liegt in Rheinland-Pfalz, ihr Name kommt vom lateinischen Wort für „Zusammenfluss“.",
+    exp:"In Koblenz mündet die Mosel in den Rhein. Die Landspitze dort heißt „Deutsches Eck“." },
+  { cat:"fluss", q:"In welches Meer fließt die Donau?", a:["Nordsee","Ostsee","Mittelmeer","Schwarzes Meer"], c:3,
+    hint:"Die Donau fließt nach Osten – ganz anders als Rhein und Elbe.",
+    exp:"Die Donau entspringt im Schwarzwald, fließt nach Osten durch viele Länder und mündet ins Schwarze Meer." },
+  { cat:"fluss", q:"An welchem Fluss liegt Frankfurt?", a:["Main","Neckar","Mosel","Weser"], c:0,
+    hint:"Der Fluss steckt sogar im vollen Namen der Stadt.",
+    exp:"Die Stadt heißt Frankfurt am Main. Der Main mündet bei Mainz in den Rhein." },
+
+  // Städte
+  { cat:"stadt", q:"Was ist die Hauptstadt von Deutschland?", a:["Bonn","München","Berlin","Frankfurt"], c:2,
+    hint:"Dort steht das Brandenburger Tor.",
+    exp:"Berlin ist die Hauptstadt und auch die größte Stadt Deutschlands. Früher (bis 1990) war Bonn Hauptstadt von Westdeutschland." },
+  { cat:"stadt", q:"Was ist die Landeshauptstadt von Rheinland-Pfalz?", a:["Koblenz","Mainz","Trier","Kaiserslautern"], c:1,
+    hint:"Die Stadt liegt am Rhein, gegenüber von Wiesbaden.",
+    exp:"Mainz ist die Landeshauptstadt von Rheinland-Pfalz. Sie liegt dort, wo der Main in den Rhein fließt." },
+  { cat:"stadt", q:"Was ist die Landeshauptstadt von Nordrhein-Westfalen?", a:["Köln","Dortmund","Bonn","Düsseldorf"], c:3,
+    hint:"Es ist nicht die größte Stadt des Landes.",
+    exp:"Düsseldorf ist Landeshauptstadt von NRW. Köln ist zwar größer, aber nicht die Hauptstadt." },
+  { cat:"stadt", q:"Welche Stadt ist die Landeshauptstadt von Bayern?", a:["Nürnberg","München","Augsburg","Regensburg"], c:1,
+    hint:"Dort findet jedes Jahr das Oktoberfest statt.",
+    exp:"München ist die Landeshauptstadt von Bayern und die drittgrößte Stadt Deutschlands." },
+  { cat:"stadt", q:"Welche Stadt hat den größten Hafen Deutschlands?", a:["Hamburg","Kiel","Rostock","Bremen"], c:0,
+    hint:"Denk an die Frage, an welchem Fluss die Stadt liegt …",
+    exp:"Hamburg hat den größten Hafen Deutschlands – an der Elbe, rund 100 km von der Nordsee entfernt." },
+
+  // Bundesländer
+  { cat:"land", q:"Wie viele Bundesländer hat Deutschland?", a:["12","14","16","18"], c:2,
+    hint:"Es ist eine gerade Zahl zwischen 15 und 17.",
+    exp:"Deutschland hat 16 Bundesländer." },
+  { cat:"land", q:"Welches ist das größte Bundesland (nach Fläche)?", a:["Niedersachsen","Bayern","Nordrhein-Westfalen","Baden-Württemberg"], c:1,
+    hint:"Es liegt ganz im Süden und hat die Alpen.",
+    exp:"Bayern ist flächenmäßig das größte Bundesland. Die meisten Einwohner hat aber Nordrhein-Westfalen." },
+  { cat:"land", q:"Welches ist das kleinste Bundesland?", a:["Saarland","Hamburg","Berlin","Bremen"], c:3,
+    hint:"Es ist ein Stadtstaat mit zwei Städten.",
+    exp:"Bremen ist das kleinste Bundesland. Es besteht aus den zwei Städten Bremen und Bremerhaven." },
+  { cat:"land", q:"Welches Bundesland grenzt an Dänemark?", a:["Schleswig-Holstein","Mecklenburg-Vorpommern","Niedersachsen","Brandenburg"], c:0,
+    hint:"Es ist das nördlichste Bundesland.",
+    exp:"Schleswig-Holstein ist das nördlichste Bundesland und grenzt an Dänemark. Es liegt zwischen Nordsee und Ostsee." },
+  { cat:"land", q:"Welche Stadt ist KEIN Stadtstaat (also kein eigenes Bundesland)?", a:["Berlin","Hamburg","München","Bremen"], c:2,
+    hint:"Es gibt genau drei Stadtstaaten in Deutschland.",
+    exp:"Die drei Stadtstaaten sind Berlin, Hamburg und Bremen. München ist eine Stadt im Bundesland Bayern." },
+
+  // Gebirge
+  { cat:"gebirge", q:"Wie heißt der höchste Berg Deutschlands?", a:["Brocken","Feldberg","Watzmann","Zugspitze"], c:3,
+    hint:"Er liegt in den Alpen an der Grenze zu Österreich.",
+    exp:"Die Zugspitze in den Alpen (Bayern) ist mit 2.962 m der höchste Berg Deutschlands." },
+  { cat:"gebirge", q:"In welchem Gebirge liegt der Brocken?", a:["Harz","Eifel","Erzgebirge","Schwarzwald"], c:0,
+    hint:"Das Gebirge liegt etwa in der Mitte Deutschlands, in Sachsen-Anhalt und Niedersachsen.",
+    exp:"Der Brocken (1.141 m) ist der höchste Berg im Harz." },
+  { cat:"gebirge", q:"In welchem Bundesland liegt der Schwarzwald?", a:["Bayern","Hessen","Baden-Württemberg","Rheinland-Pfalz"], c:2,
+    hint:"Es liegt ganz im Südwesten Deutschlands.",
+    exp:"Der Schwarzwald liegt im Südwesten, in Baden-Württemberg. Dort entspringt auch die Donau." },
+  { cat:"gebirge", q:"Welches Gebirge liegt in Rheinland-Pfalz?", a:["Erzgebirge","Hunsrück","Harz","Bayerischer Wald"], c:1,
+    hint:"Es liegt zwischen Mosel, Rhein und Nahe.",
+    exp:"Der Hunsrück liegt in Rheinland-Pfalz. Weitere Mittelgebirge dort: Eifel, Westerwald und Pfälzerwald." },
+  { cat:"gebirge", q:"Das Erzgebirge bildet die Grenze zu welchem Nachbarland?", a:["Polen","Österreich","Tschechien","Schweiz"], c:2,
+    hint:"Es liegt im Süden von Sachsen.",
+    exp:"Das Erzgebirge liegt an der Grenze zwischen Sachsen und Tschechien." }
+];
+
+const OK_MSG  = ["Richtig!", "Super!", "Genau!", "Stimmt!", "Klasse!", "Spitze!"];
+const BAD_MSG = ["Nicht ganz.", "Knapp daneben.", "Leider falsch.", "Fast!"];
+
+const $ = id => document.getElementById(id);
+const selected = new Set(Object.keys(CATS));
+let deck = [], idx = 0, score = 0, wrong = [], answered = false;
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const pick = list => list[Math.floor(Math.random() * list.length)];
+
+function renderCats() {
+  $("cats").innerHTML = "";
+  for (const [key, c] of Object.entries(CATS)) {
+    const n = QUESTIONS.filter(q => q.cat === key).length;
+    const b = document.createElement("button");
+    b.className = "cat" + (selected.has(key) ? " on" : "");
+    b.innerHTML = `<span class="emo">${c.emo}</span><span>${c.name}<small>${n} Fragen</small></span>`;
+    b.onclick = () => { selected.has(key) ? selected.delete(key) : selected.add(key); renderCats(); };
+    $("cats").appendChild(b);
+  }
+  $("go").disabled = selected.size === 0;
+}
+
+function prepare(q) {
+  // Antworten ggf. mischen, richtige Antwort mitführen
+  const order = $("shuffle").checked ? shuffle([0,1,2,3]) : [0,1,2,3];
+  return { ...q, a: order.map(i => q.a[i]), c: order.indexOf(q.c), orig: q };
+}
+
+function start(list) {
+  deck = ($("shuffle").checked ? shuffle(list) : list).map(prepare);
+  idx = 0; score = 0; wrong = [];
+  show("quiz"); renderQ();
+}
+
+function show(id) {
+  for (const s of ["start","quiz","result"]) $(s).classList.toggle("hidden", s !== id);
+}
+
+function renderQ() {
+  const q = deck[idx], c = CATS[q.cat];
+  answered = false;
+  $("count").textContent = `Frage ${idx + 1} von ${deck.length}`;
+  $("score").textContent = `⭐ ${score} Punkte`;
+  $("prog").style.width = (idx / deck.length * 100) + "%";
+  $("tag").textContent = `${c.emo} ${c.name}`;
+  $("tag").style.background = c.color;
+  $("question").textContent = q.q;
+  $("hint").classList.add("hidden");
+  $("hint").textContent = "💡 " + q.hint;
+  $("hintBtn").disabled = false;
+  $("fb").className = "fb hidden";
+  $("next").disabled = true;
+  $("next").textContent = idx === deck.length - 1 ? "Ergebnis zeigen" : "Weiter →";
+  $("opts").innerHTML = "";
+  q.a.forEach((txt, i) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = `<span class="k">${"ABCD"[i]}</span><span></span>`;
+    b.lastChild.textContent = txt;
+    b.onclick = () => answer(i);
+    $("opts").appendChild(b);
+  });
+}
+
+function answer(i) {
+  if (answered) return;
+  answered = true;
+  const q = deck[idx], btns = $("opts").children, right = i === q.c;
+  for (const b of btns) b.disabled = true;
+  btns[q.c].classList.add("ok");
+  if (right) score++; else { btns[i].classList.add("bad"); wrong.push(q); }
+  $("score").textContent = `⭐ ${score} Punkte`;
+  $("fb").className = "fb " + (right ? "ok" : "bad");
+  $("fb").innerHTML = `<b>${right ? "✅ " + pick(OK_MSG) : "❌ " + pick(BAD_MSG)}</b><span></span>`;
+  $("fb").lastChild.textContent = q.exp;
+  $("hintBtn").disabled = true;
+  $("next").disabled = false;
+  $("next").focus();
+}
+
+function finish() {
+  $("prog").style.width = "100%";
+  show("result");
+  const pct = Math.round(score / deck.length * 100);
+  $("final").textContent = `${score} / ${deck.length}`;
+  $("praise").textContent =
+    pct === 100 ? "🏆 Perfekt! Alles richtig!" :
+    pct >= 80 ? "🎉 Sehr gut gemacht!" :
+    pct >= 50 ? "👍 Gut! Mit etwas Übung wird's noch besser." :
+                "💪 Weiter üben – das schaffst du!";
+  // Ergebnis pro Thema
+  let rows = "";
+  for (const [key, c] of Object.entries(CATS)) {
+    const total = deck.filter(q => q.cat === key).length;
+    if (!total) continue;
+    const bad = wrong.filter(q => q.cat === key).length;
+    rows += `<tr><td>${c.emo} ${c.name}</td><td>${total - bad} / ${total}</td></tr>`;
+  }
+  $("perCat").innerHTML = rows;
+  // falsche Fragen mit Lösung
+  if (wrong.length) {
+    const ul = document.createElement("ul"); ul.className = "wrong";
+    for (const q of wrong) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span></span><br>→ <span class="a"></span>`;
+      li.children[0].textContent = q.q;
+      li.querySelector(".a").textContent = q.a[q.c];
+      ul.appendChild(li);
+    }
+    $("wrongBox").innerHTML = "<strong>Das solltest du nochmal anschauen:</strong>";
+    $("wrongBox").appendChild(ul);
+  } else {
+    $("wrongBox").innerHTML = "";
+  }
+  $("retryWrong").classList.toggle("hidden", wrong.length === 0);
+}
+
+$("go").onclick = () => start(QUESTIONS.filter(q => selected.has(q.cat)));
+$("hintBtn").onclick = () => { $("hint").classList.remove("hidden"); $("hintBtn").disabled = true; };
+$("next").onclick = () => { idx++; idx < deck.length ? renderQ() : finish(); };
+$("retryWrong").onclick = () => start(wrong.map(q => q.orig));
+$("restart").onclick = () => { show("start"); renderCats(); };
+document.addEventListener("keydown", e => {
+  if ($("quiz").classList.contains("hidden")) return;
+  const k = e.key.toUpperCase();
+  if (!answered && "ABCD1234".includes(k) && k.length === 1) answer("ABCD1234".indexOf(k) % 4);
+  else if (answered && e.key === "Enter") $("next").click();
+});
+
+renderCats();
+</script>
+</body>
+</html>

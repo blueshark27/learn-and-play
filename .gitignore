@@ -1,0 +1,30 @@
+# --- Betriebssystem ---
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+
+# --- Editoren / IDEs ---
+.vscode/
+.idea/
+*.swp
+*~
+
+# --- Office-Sperrdateien & Temporäres ---
+~$*
+*.tmp
+*.bak
+*.log
+
+# --- Lokale Arbeitsdateien (nicht ins Repo) ---
+_Local/
+CLAUDE_MEMORY.md
+.claude/settings.local.json
+
+# --- Falls später Build-Tools dazukommen ---
+node_modules/
+dist/
+.env
+.env.*

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listening: What time is it?</title>
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --ink:#1f2937; --muted:#6b7280; --accent:#2563eb; --ok:#16a34a; --bad:#dc2626; --sel:#f59e0b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family: "Segoe UI", system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width:960px; margin:0 auto; padding:20px; }
+  h1 { margin:0 0 4px; font-size:28px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .panel { background:var(--card); border-radius:14px; padding:16px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  label { font-size:14px; color:var(--muted); }
+  select, input[type=range] { font-size:15px; }
+  select { padding:6px 8px; border-radius:8px; border:1px solid #cbd5e1; }
+  button { font-size:16px; padding:10px 16px; border-radius:10px; border:0; cursor:pointer; background:#e5e7eb; color:var(--ink); }
+  button.primary { background:var(--accent); color:#fff; }
+  button.big { font-size:18px; padding:12px 20px; }
+  button:disabled { opacity:.5; cursor:default; }
+  .task { font-size:18px; margin:0 0 6px; }
+  .hint { color:var(--muted); font-size:14px; margin:0 0 12px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:12px; }
+  .card { position:relative; background:#fff; border:3px solid #e5e7eb; border-radius:14px; padding:12px 8px; text-align:center; cursor:pointer; user-select:none; transition:transform .1s, border-color .1s; }
+  .card:hover { transform:translateY(-2px); }
+  .card.sel { border-color:var(--sel); background:#fffbeb; }
+  .card.ok { border-color:var(--ok); background:#f0fdf4; }
+  .card.bad { border-color:var(--bad); background:#fef2f2; }
+  .card.missed { border-color:var(--bad); border-style:dashed; }
+  .digital { font-family: "Consolas", monospace; font-size:30px; font-weight:700; letter-spacing:1px; }
+  .badge { position:absolute; top:-12px; left:-12px; width:34px; height:34px; border-radius:50%; background:var(--sel); color:#fff; font-weight:700; font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .card.ok .badge { background:var(--ok); }
+  .card.bad .badge { background:var(--bad); }
+  .fix { font-size:13px; margin-top:4px; font-weight:600; }
+  .card.ok .fix { color:var(--ok); } .card.bad .fix, .card.missed .fix { color:var(--bad); }
+  .result { font-size:20px; font-weight:700; margin:12px 0 0; }
+  #story { line-height:1.8; font-size:17px; }
+  #story span.cur { background:#fde68a; border-radius:4px; }
+  #story b { color:var(--accent); }
+  table { border-collapse:collapse; width:100%; margin-top:10px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid #e5e7eb; }
+  .hidden { display:none; }
+  details summary { cursor:pointer; font-weight:600; }
+  .tips li { margin:4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Listening: What time is it?</h1>
+  <p class="sub">Englische Uhrzeiten hören – jede Übung wird neu zufällig erzeugt.</p>
+
+  <!-- Einstellungen -->
+  <div class="panel">
+    <div class="row">
+      <label>Schwierigkeit
+        <select id="level">
+          <option value="1">1 – o'clock, half past</option>
+          <option value="2" selected>2 – + quarter past / to</option>
+          <option value="3">3 – + five, ten, twenty … past / to</option>
+        </select>
+      </label>
+      <label>Anzahl Uhrzeiten
+        <select id="count">
+          <option>5</option><option>6</option><option selected>8</option><option>10</option>
+        </select>
+      </label>
+      <label>Anzeige
+        <select id="display">
+          <option value="digital">Digital</option>
+          <option value="analog">Analoge Uhr</option>
+          <option value="both" selected>Beides</option>
+        </select>
+      </label>
+      <button class="primary" id="newBtn">Neue Übung</button>
+    </div>
+  </div>
+
+  <!-- Vorlesen -->
+  <div class="panel">
+    <div class="row">
+      <button class="primary big" id="playBtn">▶ Text vorlesen lassen</button>
+      <button id="stopBtn">■ Stopp</button>
+      <label>Tempo <input type="range" id="rate" min="0.5" max="1.1" step="0.1" value="0.8"> <span id="rateVal">0.8</span></label>
+      <label>Stimme <select id="voice"></select></label>
+      <button id="toggleText">Text für Eltern anzeigen</button>
+    </div>
+    <div id="storyBox" class="hidden" style="margin-top:12px;">
+      <div id="story"></div>
+    </div>
+    <p class="hint" id="noSpeech" style="display:none;margin-top:10px;">Dieser Browser kann nicht vorlesen – bitte „Text für Eltern anzeigen“ und selbst vorlesen.</p>
+  </div>
+
+  <!-- Aufgabe -->
+  <div class="panel">
+    <p class="task"><b>Listen to the text. In which order do you hear the times?</b></p>
+    <p class="hint">Klicke die Uhrzeiten in der Reihenfolge an, in der du sie hörst. Nochmal klicken = Nummer entfernen. Achtung: Nicht alle Uhrzeiten kommen im Text vor!</p>
+    <div class="grid" id="grid"></div>
+    <div class="row" style="margin-top:16px;">
+      <button class="primary big" id="checkBtn">✓ Prüfen</button>
+      <button id="resetBtn">Auswahl löschen</button>
+    </div>
+    <div class="result" id="result"></div>
+    <div id="solution" class="hidden"></div>
+  </div>
+
+  <div class="panel">
+    <details>
+      <summary>Merkhilfe</summary>
+      <ul class="tips">
+        <li><b>o'clock</b> = volle Stunde: <i>seven o'clock</i> = 7:00</li>
+        <li><b>past</b> = nach (Minute 1–30): <i>ten past twelve</i> = 12:10</li>
+        <li><b>to</b> = vor (Minute 31–59): <i>quarter to two</i> = 1:45 – Viertel vor <b>zwei</b>, aber auf der Digitaluhr steht <b>1</b>!</li>
+        <li><b>half past seven</b> = 7:30 – <b>nicht</b> „halb sieben“ wie im Deutschen!</li>
+        <li>Langer Zeiger = Minuten, kurzer Zeiger = Stunden.</li>
+      </ul>
+    </details>
+  </div>
+</main>
+
+<script>
+// ---------- Zufall ----------
+const rnd = n => Math.floor(Math.random() * n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+// ---------- Uhrzeit -> Englisch ----------
+const HOURS = ["twelve","one","two","three","four","five","six","seven","eight","nine","ten","eleven"];
+const MINS = {5:"five",10:"ten",15:"quarter",20:"twenty",25:"twenty-five",30:"half"};
+const h12 = h => ((h % 12) + 12) % 12 || 12;
+function say(t) { // t = Minuten seit Mitternacht
+  const h = Math.floor(t / 60), m = t % 60;
+  if (m === 0) return HOURS[h % 12] + " o'clock";
+  if (m <= 30) return MINS[m] + " past " + HOURS[h % 12];
+  return MINS[60 - m] + " to " + HOURS[(h + 1) % 12];
+}
+const label = t => h12(Math.floor(t / 60)) + ":" + String(t % 60).padStart(2, "0");
+const key = t => label(((t % 720) + 720) % 720 || 720);
+
+// ---------- Analoge Uhr ----------
+function clockSVG(t) {
+  const h = Math.floor(t / 60) % 12, m = t % 60;
+  const ha = (h + m / 60) * 30, ma = m * 6;
+  let ticks = "";
+  for (let i = 0; i < 60; i++) {
+    const big = i % 5 === 0, a = i * 6 * Math.PI / 180, r1 = big ? 40 : 43, r2 = 46;
+    ticks += `<line x1="${50 + r1 * Math.sin(a)}" y1="${50 - r1 * Math.cos(a)}" x2="${50 + r2 * Math.sin(a)}" y2="${50 - r2 * Math.cos(a)}" stroke="#334155" stroke-width="${big ? 2.2 : 0.8}"/>`;
+  }
+  let nums = "";
+  for (let i = 1; i <= 12; i++) { const a = i * 30 * Math.PI / 180; nums += `<text x="${50 + 33 * Math.sin(a)}" y="${50 - 33 * Math.cos(a) + 3.5}" font-size="10" text-anchor="middle" fill="#334155">${i}</text>`; }
+  return `<svg viewBox="0 0 100 100" width="100" height="100">
+    <circle cx="50" cy="50" r="48" fill="#fff" stroke="#334155" stroke-width="2.5"/>${ticks}${nums}
+    <line x1="50" y1="50" x2="${50 + 22 * Math.sin(ha * Math.PI / 180)}" y2="${50 - 22 * Math.cos(ha * Math.PI / 180)}" stroke="#1f2937" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="50" y1="50" x2="${50 + 38 * Math.sin(ma * Math.PI / 180)}" y2="${50 - 38 * Math.cos(ma * Math.PI / 180)}" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="50" cy="50" r="3" fill="#1f2937"/></svg>`;
+}
+
+// ---------- Geschichte ----------
+const PEOPLE = [["Tom","he","his"],["Emma","she","her"],["Ben","he","his"],["Lucy","she","her"],["Max","he","his"],["Mia","she","her"],["Jack","he","his"],["Sophie","she","her"]];
+const FRIENDS = ["Sam","Lily","Noah","Anna","Leo","Grace","Finn","Ella"];
+const DAYS = ["Saturday","Sunday","Monday","Wednesday","Friday"];
+// [frühestens, spätestens (Stunde), Reihenfolge, Sätze]
+const ACTS = [
+  [6, 9, 0, ["{N} wakes up at {T}.", "At {T}, {N}'s alarm clock rings and {h} wakes up."]],
+  [6, 9, 1, ["{H} brushes {his} teeth at {T}.", "At {T}, {N} takes a quick shower."]],
+  [6, 10, 2, ["At {T}, {N} has breakfast with {his} family.", "{N} eats cornflakes for breakfast at {T}."]],
+  [7, 18, 3, ["At {T}, {h} walks the dog.", "{N} takes the dog for a walk at {T}."]],
+  [9, 17, 4, ["At {T}, {h} meets {his} friend {F} at the park.", "{N} meets {F} in front of the school at {T}."]],
+  [9, 18, 4, ["{H} plays football with {his} friends at {T}.", "At {T}, {N} rides {his} bike to the lake."]],
+  [10, 17, 5, ["At {T}, {h} goes to the library.", "{N} visits {his} grandma at {T}."]],
+  [10, 18, 5, ["At {T}, {N} goes swimming with {his} sister.", "{H} goes shopping with {his} dad at {T}."]],
+  [11, 14, 6, ["{N} has lunch at {T}.", "At {T}, the family eats pizza for lunch."]],
+  [13, 19, 7, ["At {T}, {h} does {his} homework.", "{N} learns new English words at {T}."]],
+  [13, 20, 7, ["{H} plays video games at {T}.", "At {T}, {N} reads a comic in {his} room."]],
+  [15, 17, 8, ["At {T}, {h} eats a piece of cake.", "{N} has a snack at {T}."]],
+  [16, 19, 9, ["At {T}, {h} helps {his} mum in the kitchen.", "{N} tidies up {his} room at {T}."]],
+  [17, 20, 10, ["{H} has dinner with {his} family at {T}.", "At {T}, it is time for dinner."]],
+  [18, 21, 11, ["At {T}, {h} watches a film.", "{N} plays a board game with {his} parents at {T}."]],
+  [19, 22, 12, ["{N} is very tired. {H} goes to bed at {T}.", "At {T}, {N} goes to bed and falls asleep."]],
+];
+const cap = s => s[0].toUpperCase() + s.slice(1);
+
+function makeTimes(n, level) {
+  const step = level === 1 ? 30 : level === 2 ? 15 : 5;
+  for (let tries = 0; tries < 500; tries++) {
+    const set = new Set();
+    while (set.size < n * 3) set.add(6 * 60 + rnd((21 * 60 - 6 * 60) / step + 1) * step);
+    let cand = shuffle([...set]).slice(0, n).sort((a, b) => a - b);
+    let ok = cand.every((t, i) => i === 0 || t - cand[i - 1] >= 40);
+    const keys = new Set(cand.map(key));
+    if (ok && keys.size === n) return cand;
+  }
+  // Fallback: gleichmäßig verteilt
+  const out = []; for (let i = 0; i < n; i++) out.push(6 * 60 + Math.round(i * (15 * 60 / n) / step) * step); return out;
+}
+
+function makeStory(times) {
+  const [N, h, his] = pick(PEOPLE), F = pick(FRIENDS), day = pick(DAYS);
+  const used = new Set(); let lastOrder = -1;
+  const sents = times.map(t => {
+    const hr = t / 60;
+    let fit = ACTS.map((a, i) => i).filter(i => !used.has(i) && hr >= ACTS[i][0] && hr <= ACTS[i][1]);
+    let good = fit.filter(i => ACTS[i][2] >= lastOrder);
+    // Zum Schlafengehen nur beim letzten Termin
+    const isLast = t === times[times.length - 1];
+    const noBed = good.filter(i => ACTS[i][2] !== 12);
+    if (!isLast && noBed.length) good = noBed;
+    if (isLast && good.some(i => ACTS[i][2] === 12)) good = good.filter(i => ACTS[i][2] === 12);
+    const i = good.length ? pick(good) : (fit.length ? pick(fit) : null);
+    let s;
+    if (i === null) s = "At {T}, {h} has a short break.";
+    else { used.add(i); lastOrder = Math.max(lastOrder, ACTS[i][2]); s = pick(ACTS[i][3]); }
+    s = s.replace(/\{N\}/g, N).replace(/\{H\}/g, cap(h)).replace(/\{h\}/g, h).replace(/\{his\}/g, his).replace(/\{F\}/g, F);
+    const parts = s.split("{T}");
+    return { text: parts.join(say(t)), html: parts.map(p => p.replace(/^./, c => c)).join("<b>" + say(t) + "</b>"), t };
+  });
+  sents.forEach(s => { s.text = s.text.replace(/^./, c => c.toUpperCase()); s.html = s.html.replace(/^./, c => c.toUpperCase()); });
+  return { title: `${N}'s ${day}`, intro: `This is ${N}'s ${day}.`, sents };
+}
+
+// ---------- Ablenker (typische Verwechslungen) ----------
+function makeDistractors(times, n) {
+  const used = new Set(times.map(key)), out = [];
+  const cands = [];
+  times.forEach(t => {
+    const h = Math.floor(t / 60), m = t % 60;
+    if (m === 30) cands.push(t - 60, t + 60);                    // „halb sieben“-Falle
+    else if (m === 0) cands.push(t + 30, t - 30, t + 60);
+    else if (m < 30) cands.push((h - 1) * 60 + (60 - m), t + 60); // past <-> to vertauscht
+    else cands.push((h + 1) * 60 + (60 - m), t + 60);             // to <-> past vertauscht / Stunde nicht angepasst
+    cands.push(t - 60);
+  });
+  for (const c of shuffle(cands)) {
+    if (out.length >= n) break;
+    if (c <= 0) continue;
+    const k = key(c);
+    if (!used.has(k)) { used.add(k); out.push(c); }
+  }
+  return out;
+}
+
+// ---------- Zustand & UI ----------
+let state = null;
+const $ = id => document.getElementById(id);
+
+function newExercise() {
+  stopSpeech();
+  const level = +$("level").value, n = +$("count").value;
+  const times = makeTimes(n, level);
+  const story = makeStory(times);
+  const distract = makeDistractors(times, Math.max(3, Math.round(n / 2)));
+  const cards = shuffle([...times.map((t, i) => ({ t, correct: i + 1 })), ...distract.map(t => ({ t, correct: 0 }))]);
+  state = { story, cards, picks: [], checked: false };
+  renderStory(); renderGrid();
+  $("result").textContent = ""; $("solution").classList.add("hidden");
+  $("checkBtn").disabled = false;
+}
+
+function renderStory() {
+  const s = state.story;
+  $("story").innerHTML = `<p><b style="color:inherit">${s.title}</b></p><p><span data-i="-1">${s.intro}</span> ` +
+    s.sents.map((x, i) => `<span data-i="${i}">${x.html}</span>`).join(" ") + "</p>";
+}
+
+function renderGrid() {
+  const disp = $("display").value;
+  $("grid").innerHTML = state.cards.map((c, i) => {
+    const pos = state.picks.indexOf(i);
+    let cls = "card", badge = "", fix = "";
+    if (state.checked) {
+      if (c.correct && pos + 1 === c.correct) { cls += " ok"; fix = "richtig ✓"; }
+      else if (c.correct && pos >= 0) { cls += " bad"; fix = "richtig wäre: " + c.correct; }
+      else if (c.correct) { cls += " missed"; fix = "vergessen – Nr. " + c.correct; }
+      else if (pos >= 0) { cls += " bad"; fix = "kam nicht vor"; }
+      else { fix = "kam nicht vor"; cls += ""; }
+    } else if (pos >= 0) cls += " sel";
+    if (pos >= 0) badge = `<div class="badge">${pos + 1}</div>`;
+    return `<div class="${cls}" data-i="${i}">${badge}
+      ${disp !== "digital" ? clockSVG(c.t) : ""}
+      ${disp !== "analog" ? `<div class="digital">${label(c.t)}</div>` : ""}
+      ${fix ? `<div class="fix">${fix}</div>` : ""}</div>`;
+  }).join("");
+}
+
+$("grid").addEventListener("click", e => {
+  const el = e.target.closest(".card"); if (!el || state.checked) return;
+  const i = +el.dataset.i, pos = state.picks.indexOf(i);
+  if (pos >= 0) state.picks.splice(pos, 1); else state.picks.push(i);
+  renderGrid();
+});
+
+$("checkBtn").onclick = () => {
+  state.checked = true; renderGrid();
+  const total = state.story.sents.length;
+  const right = state.cards.filter((c, i) => c.correct && state.picks.indexOf(i) + 1 === c.correct).length;
+  const wrongPicks = state.cards.filter((c, i) => !c.correct && state.picks.includes(i)).length;
+  const msg = right === total && !wrongPicks ? "🎉 Perfekt! Alles richtig!" : right >= total * 0.7 ? "👍 Gut gemacht!" : "Weiter üben – du schaffst das!";
+  $("result").textContent = `${right} von ${total} richtig${wrongPicks ? `, ${wrongPicks} falsche Uhrzeit(en) gewählt` : ""}. ${msg}`;
+  $("solution").innerHTML = "<table><tr><th>Nr.</th><th>Gesprochen</th><th>Uhrzeit</th></tr>" +
+    state.story.sents.map((s, i) => `<tr><td>${i + 1}</td><td>${say(s.t)}</td><td>${label(s.t)}</td></tr>`).join("") + "</table>";
+  $("solution").classList.remove("hidden");
+  $("checkBtn").disabled = true;
+};
+$("resetBtn").onclick = () => { state.picks = []; state.checked = false; $("result").textContent = ""; $("solution").classList.add("hidden"); $("checkBtn").disabled = false; renderGrid(); };
+$("newBtn").onclick = newExercise;
+$("display").onchange = renderGrid;
+$("toggleText").onclick = () => {
+  const box = $("storyBox"); box.classList.toggle("hidden");
+  $("toggleText").textContent = box.classList.contains("hidden") ? "Text für Eltern anzeigen" : "Text verstecken";
+};
+
+// ---------- Sprachausgabe ----------
+const synth = window.speechSynthesis;
+let voices = [], speakId = 0;
+function loadVoices() {
+  if (!synth) return;
+  voices = synth.getVoices().filter(v => v.lang.toLowerCase().startsWith("en"));
+  voices.sort((a, b) => (b.lang === "en-GB") - (a.lang === "en-GB"));
+  $("voice").innerHTML = voices.map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join("") || "<option>Standard</option>";
+}
+if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; } else { $("noSpeech").style.display = "block"; $("playBtn").disabled = true; }
+$("rate").oninput = () => $("rateVal").textContent = $("rate").value;
+
+function highlight(i) {
+  document.querySelectorAll("#story span").forEach(s => s.classList.toggle("cur", +s.dataset.i === i && i !== null));
+}
+function stopSpeech() { speakId++; if (synth) synth.cancel(); highlight(null); }
+function speakAll() {
+  stopSpeech();
+  const id = speakId, s = state.story;
+  const parts = [{ text: s.intro, i: -1 }, ...s.sents.map((x, i) => ({ text: x.text, i }))];
+  let k = 0;
+  const next = () => {
+    if (id !== speakId) return;
+    if (k >= parts.length) { highlight(null); return; }
+    const p = parts[k++], u = new SpeechSynthesisUtterance(p.text);
+    const v = voices[+$("voice").value]; if (v) u.voice = v;
+    u.lang = v ? v.lang : "en-GB"; u.rate = +$("rate").value;
+    u.onstart = () => highlight(p.i);
+    u.onend = () => setTimeout(next, 900);   // kurze Pause zwischen den Sätzen
+    u.onerror = () => setTimeout(next, 200);
+    synth.speak(u);
+  };
+  next();
+}
+$("playBtn").onclick = speakAll;
+$("stopBtn").onclick = stopSpeech;
+
+newExercise();
+</script>
+</body>
+</html>

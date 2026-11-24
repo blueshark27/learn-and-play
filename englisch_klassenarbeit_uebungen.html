@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Englisch – Übungen zur 1. Klassenarbeit</title>
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --ink:#1f2937; --muted:#6b7280; --accent:#2563eb; --ok:#16a34a; --bad:#dc2626; --sel:#f59e0b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Segoe UI", system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width:980px; margin:0 auto; padding:20px; }
+  header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+  h1 { margin:0; font-size:26px; }
+  h2 { margin:0 0 8px; font-size:22px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .panel { background:var(--card); border-radius:14px; padding:18px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  label { font-size:14px; color:var(--muted); }
+  select { padding:6px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:15px; }
+  button { font-size:16px; padding:10px 16px; border-radius:10px; border:0; cursor:pointer; background:#e5e7eb; color:var(--ink); }
+  button.primary { background:var(--accent); color:#fff; }
+  button:disabled { opacity:.5; cursor:default; }
+  .topics { display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:12px; }
+  .topic { background:#fff; border:2px solid #e5e7eb; border-radius:14px; padding:16px; cursor:pointer; text-align:left; font-size:16px; }
+  .topic:hover { border-color:var(--accent); }
+  .topic .ic { font-size:30px; display:block; margin-bottom:6px; }
+  .topic.mix { border-color:var(--sel); background:#fffbeb; }
+  .progress { display:flex; justify-content:space-between; color:var(--muted); font-size:14px; margin-bottom:10px; }
+  .bar { height:8px; background:#e5e7eb; border-radius:4px; overflow:hidden; margin-bottom:14px; }
+  .bar div { height:100%; background:var(--accent); transition:width .2s; }
+  .prompt { font-size:19px; line-height:1.6; margin-bottom:14px; }
+  .prompt big { font-size:24px; display:inline-block; margin:6px 0; }
+  .ans { font-size:20px; padding:10px 12px; border-radius:10px; border:2px solid #cbd5e1; width:min(100%, 520px); }
+  .ans:focus { outline:none; border-color:var(--accent); }
+  .opts { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:10px; }
+  .opt { font-size:18px; background:#fff; border:2px solid #cbd5e1; text-align:left; }
+  .opt:hover:not(:disabled) { border-color:var(--accent); }
+  .opt.ok { border-color:var(--ok); background:#f0fdf4; opacity:1; }
+  .opt.bad { border-color:var(--bad); background:#fef2f2; opacity:1; }
+  .fb { margin-top:14px; padding:12px 14px; border-radius:10px; font-size:17px; line-height:1.5; }
+  .fb.ok { background:#f0fdf4; border-left:5px solid var(--ok); }
+  .fb.bad { background:#fef2f2; border-left:5px solid var(--bad); }
+  .fb .ex { color:#374151; font-size:15px; margin-top:6px; }
+  .digital { font-family:Consolas, monospace; font-size:30px; font-weight:700; }
+  .chips span { display:inline-block; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; padding:4px 10px; margin:3px; font-size:20px; }
+  .emo { font-size:34px; letter-spacing:4px; }
+  table.tt { border-collapse:collapse; margin:6px 0 12px; font-size:15px; }
+  table.tt th, table.tt td { border:1px solid #cbd5e1; padding:5px 8px; text-align:center; }
+  table.tt th { background:#eef2ff; }
+  table.sol { border-collapse:collapse; width:100%; margin-top:10px; }
+  table.sol th, table.sol td { text-align:left; padding:6px 8px; border-bottom:1px solid #e5e7eb; }
+  details summary { cursor:pointer; font-weight:600; }
+  .help { font-size:15px; line-height:1.6; }
+  .help ul { margin:6px 0; }
+  .big-result { font-size:26px; font-weight:700; margin:6px 0 10px; }
+  .wrong-list li { margin:6px 0; }
+  .hidden { display:none; }
+  /* Hörverstehen */
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:12px; }
+  .card { position:relative; background:#fff; border:3px solid #e5e7eb; border-radius:14px; padding:12px 8px; text-align:center; cursor:pointer; user-select:none; }
+  .card.sel { border-color:var(--sel); background:#fffbeb; }
+  .card.ok { border-color:var(--ok); background:#f0fdf4; }
+  .card.bad { border-color:var(--bad); background:#fef2f2; }
+  .card.missed { border-color:var(--bad); border-style:dashed; }
+  .badge { position:absolute; top:-12px; left:-12px; width:34px; height:34px; border-radius:50%; background:var(--sel); color:#fff; font-weight:700; font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .card.ok .badge { background:var(--ok); } .card.bad .badge { background:var(--bad); }
+  .fix { font-size:13px; margin-top:4px; font-weight:600; }
+  .card.ok .fix { color:var(--ok); } .card.bad .fix, .card.missed .fix { color:var(--bad); }
+  #lsStory { line-height:1.8; font-size:17px; }
+  #lsStory span.cur { background:#fde68a; border-radius:4px; }
+  #lsStory b { color:var(--accent); }
+  /* Schreiben */
+  textarea { width:100%; min-height:220px; font-size:17px; padding:12px; border-radius:10px; border:2px solid #cbd5e1; font-family:inherit; }
+  .checklist li { margin:4px 0; list-style:none; }
+  .model { background:#f8fafc; border-left:4px solid var(--accent); padding:10px 14px; line-height:1.7; white-space:pre-line; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>🇬🇧 Englisch – Übungen zur 1. Klassenarbeit</h1>
+      <div class="muted">Alle Aufgaben werden zufällig erzeugt – jede Runde ist anders.</div>
+    </div>
+    <div class="row">
+      <label>Stimme <select id="voice"></select></label>
+      <label>Tempo <select id="rate"><option>0.6</option><option>0.7</option><option selected>0.8</option><option>0.9</option><option>1</option></select></label>
+    </div>
+  </header>
+  <div id="app"></div>
+</main>
+
+<script>
+// ================= Helfer =================
+const R = n => Math.floor(Math.random() * n);
+const pick = a => a[R(a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = R(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const $ = id => document.getElementById(id);
+const uniq = a => [...new Set(a)];
+
+// ================= Zahlen =================
+const ONES = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+const TENS = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+const numWord = n => n < 20 ? ONES[n] : TENS[Math.floor(n / 10)] + (n % 10 ? "-" + ONES[n % 10] : "");
+const ORD_IRR = {1:"first",2:"second",3:"third",5:"fifth",8:"eighth",9:"ninth",12:"twelfth"};
+function ordWord(n) {
+  if (n < 20) return ORD_IRR[n] || numWord(n) + "th";
+  if (n % 10 === 0) return numWord(n).replace(/y$/, "ieth");
+  return TENS[Math.floor(n / 10)] + "-" + ordWord(n % 10);
+}
+const ordShort = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? "th" : ({1:"st",2:"nd",3:"rd"}[n % 10] || "th"));
+const TRICKY = [12,13,14,15,18,19,20,30,40,44,48,50,55,80,88,15,40,14,90,99,31,13,70,17];
+const pickNum = () => Math.random() < .35 ? pick(TRICKY) : 1 + R(99);
+function numExplain(n) {
+  const w = numWord(n), x = [];
+  if (/forty/.test(w)) x.push("<i>forty</i> schreibt man ohne u (four → forty).");
+  if (/fifteen|fifty/.test(w)) x.push("five → fi<b>f</b>teen / fi<b>f</b>ty.");
+  if (/eighteen|eighty/.test(w)) x.push("eight + teen = eigh<b>t</b>een (nur ein t).");
+  if (/thirteen|thirty/.test(w)) x.push("three → <b>thir</b>teen / <b>thir</b>ty.");
+  if (/twelve/.test(w)) x.push("12 = twelve.");
+  if (/twenty/.test(w)) x.push("20 = twenty (nicht twoty).");
+  if (n > 20 && n % 10) x.push("Zehner und Einer werden mit Bindestrich verbunden: " + w + ".");
+  return x.join(" ");
+}
+
+// ================= Tage & Monate =================
+const DAYS = [["Monday","Montag"],["Tuesday","Dienstag"],["Wednesday","Mittwoch"],["Thursday","Donnerstag"],["Friday","Freitag"],["Saturday","Samstag"],["Sunday","Sonntag"]];
+const MONTHS = [["January","Januar",31],["February","Februar",28],["March","März",31],["April","April",30],["May","Mai",31],["June","Juni",30],["July","Juli",31],["August","August",31],["September","September",30],["October","Oktober",31],["November","November",30],["December","Dezember",31]];
+const PEOPLE = [["Tom","his"],["Emma","her"],["Ben","his"],["Lucy","her"],["Max","his"],["Mia","her"],["Jack","his"],["Sophie","her"],["Noah","his"],["Lily","her"]];
+
+// ================= Uhrzeit =================
+const HOURS = ["twelve","one","two","three","four","five","six","seven","eight","nine","ten","eleven"];
+const MINS = {5:"five",10:"ten",15:"quarter",20:"twenty",25:"twenty-five",30:"half"};
+const h12 = h => ((h % 12) + 12) % 12 || 12;
+function say(t) {
+  const h = Math.floor(t / 60), m = t % 60;
+  if (m === 0) return HOURS[h % 12] + " o'clock";
+  if (m <= 30) return MINS[m] + " past " + HOURS[h % 12];
+  return MINS[60 - m] + " to " + HOURS[(h + 1) % 12];
+}
+function digitalStyle(t) { // „seven fifteen“ – wird auch akzeptiert
+  const h = Math.floor(t / 60), m = t % 60;
+  return HOURS[h % 12] + " " + (m === 0 ? "o'clock" : m < 10 ? "oh " + numWord(m) : numWord(m));
+}
+const label = t => h12(Math.floor(t / 60)) + ":" + String(t % 60).padStart(2, "0");
+const key = t => label(((t % 720) + 720) % 720 || 720);
+function timeExplain(m) {
+  if (m === 0) return "Volle Stunde: <i>… o'clock</i>.";
+  if (m === 30) return "<i>half past seven</i> = 7:30 – nicht „halb sieben“! (half <b>past</b> = halb <b>nach</b>)";
+  if (m < 30) return "Minute 1–30: <i>… past</i> (nach) + <b>aktuelle</b> Stunde.";
+  return "Minute 31–59: <i>… to</i> (vor) + <b>nächste</b> Stunde. Z. B. 1:45 = quarter to <b>two</b>.";
+}
+function clockSVG(t, size = 100) {
+  const h = Math.floor(t / 60) % 12, m = t % 60, ha = (h + m / 60) * 30, ma = m * 6, rad = a => a * Math.PI / 180;
+  let s = "";
+  for (let i = 0; i < 60; i++) { const big = i % 5 === 0, a = rad(i * 6), r1 = big ? 40 : 43;
+    s += `<line x1="${50 + r1 * Math.sin(a)}" y1="${50 - r1 * Math.cos(a)}" x2="${50 + 46 * Math.sin(a)}" y2="${50 - 46 * Math.cos(a)}" stroke="#334155" stroke-width="${big ? 2.2 : .8}"/>`; }
+  for (let i = 1; i <= 12; i++) { const a = rad(i * 30); s += `<text x="${50 + 33 * Math.sin(a)}" y="${50 - 33 * Math.cos(a) + 3.5}" font-size="10" text-anchor="middle" fill="#334155">${i}</text>`; }
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}"><circle cx="50" cy="50" r="48" fill="#fff" stroke="#334155" stroke-width="2.5"/>${s}
+    <line x1="50" y1="50" x2="${50 + 22 * Math.sin(rad(ha))}" y2="${50 - 22 * Math.cos(rad(ha))}" stroke="#1f2937" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="50" y1="50" x2="${50 + 38 * Math.sin(rad(ma))}" y2="${50 - 38 * Math.cos(rad(ma))}" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="50" cy="50" r="3" fill="#1f2937"/></svg>`;
+}
+function randTime(fine = true) {
+  const m = fine ? pick([0,15,30,45,0,15,30,45,5,10,20,25,35,40,50,55]) : pick([0,15,30,45]);
+  return (1 + R(12)) * 60 + m;
+}
+function timeConfusions(t) { // typische Verwechslungen
+  const h = Math.floor(t / 60), m = t % 60, c = [];
+  if (m === 30) c.push(t - 60, t + 60);
+  else if (m === 0) c.push(t + 30, t - 30, t + 60);
+  else if (m < 30) c.push((h - 1) * 60 + (60 - m), t + 60);
+  else c.push((h + 1) * 60 + (60 - m), t + 60);
+  c.push(t - 60, t + 60);
+  return c.filter(x => x > 0);
+}
+function timeOptions(t) {
+  const used = new Set([key(t)]), out = [label(t)];
+  for (const c of shuffle(timeConfusions(t)).concat([randTime(), randTime(), randTime()])) {
+    if (out.length >= 4) break;
+    if (!used.has(key(c))) { used.add(key(c)); out.push(key(c)); }
+  }
+  return out;
+}
+
+// ================= Schulfächer & Stundenplan =================
+const SUBJ = [["Maths","Mathe",["Maths","Math","Mathematics"]],["English","Englisch"],["German","Deutsch"],["French","Französisch"],["Art","Kunst"],["Music","Musik"],["PE","Sport",["PE","P E","Physical Education"]],["Biology","Biologie"],["Geography","Erdkunde"],["History","Geschichte"],["RE","Religion",["RE","R E","Religion","Religious Education"]],["Science","Naturwissenschaften (NaWi)"],["Latin","Latein"],["Computer Science","Informatik",["Computer Science","Computing","ICT"]]];
+const subjAns = s => (SUBJ.find(x => x[0] === s)[2]) || [s];
+const LESSONS = [7*60+55, 8*60+40, 9*60+45, 10*60+30, 11*60+30, 12*60+15];
+const WEEK = DAYS.slice(0, 5).map(d => d[0]);
+let TT = null;
+function makeTT() {
+  const pool = SUBJ.slice(0, 12).map(s => s[0]);
+  return WEEK.map(() => shuffle(pool).slice(0, 6));
+}
+function ttHTML() {
+  return `<table class="tt"><tr><th></th>${WEEK.map(d => `<th>${d}</th>`).join("")}</tr>` +
+    LESSONS.map((t, l) => `<tr><th>${l + 1}. (${label(t)})</th>${WEEK.map((d, i) => `<td>${TT[i][l]}</td>`).join("")}</tr>`).join("") + "</table>";
+}
+
+// ================= to be =================
+const PRON = ["I","you","he","she","it","we","they"];
+const BE_S = [["I","am"],["you","are"],["he","is"],["she","is"],["it","is"],["we","are"],["they","are"],["Tom","is"],["Lucy","is"],["my parents","are"],["the dog","is"],["Ben and I","are"],["my sister","is"],["Mr Smith","is"]];
+const COMPS = ["at school","hungry","in the garden","from Germany","late","tired","in Class 5c","good at Maths","at home","happy","in the kitchen"];
+const COMPS_IT = ["in the garden","hungry","tired","at home","in the kitchen","happy"];
+const compFor = s => (s === "it" || s === "the dog") ? pick(COMPS_IT) : pick(COMPS);
+const BE_HELP = "I → <b>am</b> · he / she / it (eine Person oder Sache) → <b>is</b> · you / we / they (mehrere) → <b>are</b>";
+
+// ================= Imperativ =================
+const POS_IMP = ["Open your books","Close the window","Sit down","Stand up","Listen to the CD","Look at the board","Be quiet","Put up your hand","Wear black shoes","Bring your PE kit","Read the text","Write the words in your exercise book","Clean the board","Help your partner"];
+const NEG_IMP = ["run in the corridor","eat in class","be late","talk in the library","use your mobile phone in class","wear trainers","forget your homework","shout","write on the desks","chew gum"];
+const IMP_MC = [
+  ["Dein Freund ist in der Bibliothek zu laut.","Be quiet, please!",["Don't be quiet!","Are quiet, please!","You quiet, please!"]],
+  ["Die Lehrerin möchte, dass alle die Bücher öffnen.","Open your books, please.",["Opens your books.","Don't open your books.","Opening your books, please."]],
+  ["Schulregel: keine Turnschuhe, sondern schwarze Schuhe.","Don't wear trainers, wear black shoes!",["Not wear trainers, wear black shoes!","Wear not trainers, wear black shoes!","Don't wear black shoes, wear trainers!"]],
+  ["Ein Mitschüler rennt im Flur.","Don't run in the corridor!",["Not run in the corridor!","Run not in the corridor!","Don't running in the corridor!"]],
+  ["Du möchtest, dass dein Partner dir zuhört.","Listen to me, please!",["Listens to me, please!","Don't listen to me!","Listening to me, please!"]],
+  ["Der Lehrer möchte, dass ihr euch hinsetzt.","Sit down, please.",["Sits down, please.","Don't sit down.","Sitting down, please."]],
+  ["Deine Schwester soll nicht zu spät kommen.","Don't be late!",["Not be late!","Be not late!","Don't late!"]],
+  ["Dein Freund soll seine Hausaufgaben nicht vergessen.","Don't forget your homework!",["Not forget your homework!","Forget not your homework!","Don't forgets your homework!"]]
+];
+
+// ================= there is / there are =================
+const ITEMS = [["window","windows","🪟"],["chair","chairs","🪑"],["computer","computers","💻"],["book","books","📚"],["plant","plants","🪴"],["clock","clocks","🕒"],["ball","balls","⚽"],["pencil","pencils","✏️"],["bag","bags","🎒"],["poster","posters","🖼️"],["apple","apples","🍎"],["cat","cats","🐈"]];
+const art = s => /^[aeiou]/.test(s) ? "an " + s : "a " + s;
+const PLACES = ["in the classroom","in my bag","on the table","in the room","on the desk"];
+const randCount = () => { const r = Math.random(); return r < .3 ? 0 : r < .55 ? 1 : 2 + R(5); };
+
+// ================= Fragen-Generatoren =================
+const G = {
+  // --- Zahlen ---
+  numListen: () => { const n = pickNum(); return { prompt: "🔊 Hör gut zu und schreib die Zahl <b>in Ziffern</b>.", speak: numWord(n), answers: [String(n)], show: `${n} (${numWord(n)})`, label: "Zahl hören: " + numWord(n) }; },
+  numToWord: () => { const n = pickNum(); return { prompt: `Schreib die Zahl auf Englisch:<br><big>${n}</big>`, answers: [numWord(n)], explain: numExplain(n) }; },
+  wordToNum: () => { const n = pickNum(); return { prompt: `Welche Zahl ist das? Schreib sie in Ziffern.<br><big>${numWord(n)}</big>`, answers: [String(n)] }; },
+  numMath: () => { const a = 1 + R(50), b = 1 + R(49); return { prompt: `Rechne und schreib das Ergebnis <b>als Wort</b>:<br><big>${numWord(a)} + ${numWord(b)} = ?</big>`, answers: [numWord(a + b)], show: `${numWord(a + b)} (${a + b})`, explain: numExplain(a + b) }; },
+  // --- Wochentage ---
+  dayDE: () => { const d = pick(DAYS); return { prompt: `Wie heißt der Wochentag auf Englisch?<br><big>${d[1]}</big>`, answers: [d[0]], cs: true, explain: "Wochentage schreibt man im Englischen immer <b>groß</b>." + (/Wed|Thu|Tue/.test(d[0]) ? " Achtung Schreibweise: <b>Wed</b>nesday, <b>Thurs</b>day, <b>Tues</b>day." : "") }; },
+  dayAfter: () => { const i = R(7), after = Math.random() < .5, j = after ? (i + 1) % 7 : (i + 6) % 7;
+    return { prompt: `<big>What day comes ${after ? "after" : "before"} ${DAYS[i][0]}?</big><br><span class="muted">(${after ? "after = nach" : "before = vor"})</span>`, answers: [DAYS[j][0]], cs: true, explain: "Wochentage schreibt man immer groß." }; },
+  dayListen: () => { const d = pick(DAYS)[0]; const opts = uniq([d, ...(d === "Tuesday" ? ["Thursday"] : d === "Thursday" ? ["Tuesday"] : []), ...shuffle(DAYS.map(x => x[0]))]).slice(0, 4);
+    return { prompt: "🔊 Welchen Wochentag hörst du?", speak: d, kind: "choice", options: shuffle(opts), answers: [d], label: "Wochentag hören: " + d }; },
+  // --- Monate & Daten ---
+  monthDE: () => { const m = pick(MONTHS); return { prompt: `Wie heißt der Monat auf Englisch?<br><big>${m[1]}</big>`, answers: [m[0]], cs: true, explain: "Monate schreibt man im Englischen immer <b>groß</b>." }; },
+  ordToWord: () => { const n = 1 + R(31); return { prompt: `Schreib die Ordnungszahl als Wort:<br><big>${ordShort(n)}</big>`, answers: [ordWord(n)], explain: "Besondere Formen: 1st first, 2nd second, 3rd third, 5th fifth, 8th eighth, 9th ninth, 12th twelfth, 20th twentieth, 21st twenty-first." }; },
+  wordToOrd: () => { const n = 1 + R(31); return { prompt: `Schreib die Kurzform (z. B. 4th):<br><big>${ordWord(n)}</big>`, answers: [ordShort(n)], explain: "Endungen: 1 → <b>st</b>, 2 → <b>nd</b>, 3 → <b>rd</b>, sonst <b>th</b>. Ausnahme: 11th, 12th, 13th." }; },
+  birthdayType: () => { const [nm, his] = pick(PEOPLE), mi = R(12), d = 1 + R(MONTHS[mi][2]), M = MONTHS[mi][0], ans = [];
+    for (const x of [ordWord(d), ordShort(d)]) ans.push(`${x} of ${M}`, `the ${x} of ${M}`, `on the ${x} of ${M}`, `${cap(his)} birthday is on the ${x} of ${M}`);
+    return { prompt: `🎂 ${nm} hat am <b>${d}. ${MONTHS[mi][1]}</b> Geburtstag.<br><big>When is ${his} birthday?</big><br>${cap(his)} birthday is on the … <span class="muted">(schreib z. B. „fifth of May“)</span>`,
+      answers: ans, cs: true, show: `${cap(his)} birthday is on the ${ordWord(d)} of ${M}.`, explain: "Datum: <i>on the</i> + Ordnungszahl + <i>of</i> + Monat (groß!)." }; },
+  birthdayMC: () => { const mi = R(12), d = 1 + R(MONTHS[mi][2]), M = MONTHS[mi][0], o = ordShort(d);
+    if (Math.random() < .6) return { prompt: `<big>When is your birthday?</big><br>Welche Antwort ist richtig?`, kind: "choice", answers: [`My birthday is on the ${o} of ${M}.`],
+      options: shuffle([`My birthday is on the ${o} of ${M}.`, `My birthday is in the ${o} of ${M}.`, `My birthday is on the ${numWord(d)} of ${M}.`, `My birthday is at the ${o} of ${M}.`]), explain: "Bei einem <b>Datum</b>: <i>on</i> the 3rd of May." };
+    return { prompt: `<big>When is your birthday?</big><br>Du nennst nur den Monat. Welche Antwort ist richtig?`, kind: "choice", answers: [`My birthday is in ${M}.`],
+      options: shuffle([`My birthday is in ${M}.`, `My birthday is on ${M}.`, `My birthday is at ${M}.`, `My birthday is in ${M.toLowerCase()}.`]), explain: "Nur Monat: <i>in</i> May. Mit Datum: <i>on</i> the 3rd of May. Monate groß!" }; },
+  dateListen: () => { const mi = R(12), d = 1 + R(28), f = (d, m) => `${d}. ${MONTHS[(m + 12) % 12][1]}`;
+    const opts = uniq([f(d, mi), f(d, mi + 1), f(d < 28 ? d + 1 : d - 1, mi), f(d <= 9 ? d + 20 : d === 13 ? 30 : d === 30 ? 13 : (d + 10 <= 28 ? d + 10 : d - 10), mi), f(1 + R(28), R(12))]).slice(0, 4);
+    return { prompt: "🔊 Welches Datum hörst du?", speak: `the ${ordWord(d)} of ${MONTHS[mi][0]}`, kind: "choice", options: shuffle(opts), answers: [f(d, mi)], label: `Datum hören: the ${ordWord(d)} of ${MONTHS[mi][0]}` }; },
+  // --- Uhrzeit ---
+  timeWrite: () => { const t = randTime(), dig = Math.random() < .5;
+    return { prompt: `${clockSVG(t, 130)}${dig ? `<div class="digital">${label(t)}</div>` : ""}<big>What's the time?</big> Schreib die Uhrzeit auf Englisch.`, answers: [say(t), digitalStyle(t)], show: `It's ${say(t)}.`,
+      clean: s => s.replace(/^(it's|it is|its)\s+/i, ""), explain: timeExplain(t % 60), label: "Uhrzeit schreiben: " + label(t) }; },
+  timeListen: () => { const t = randTime(); return { prompt: "🔊 Welche Uhrzeit hörst du?", speak: `It's ${say(t)}.`, kind: "choice", options: shuffle(timeOptions(t)), answers: [label(t)], show: `${label(t)} – ${say(t)}`, explain: timeExplain(t % 60), label: "Uhrzeit hören: " + say(t) }; },
+  timeRead: () => { const t = randTime(); return { prompt: `Welche Uhrzeit ist das?<br><big>It's ${say(t)}.</big>`, kind: "choice", options: shuffle(timeOptions(t)), answers: [label(t)], explain: timeExplain(t % 60) }; },
+  timeAsk: () => {
+    if (Math.random() < .5) { const c = pick(["Excuse me, what's the time, please?", "Excuse me, what time is it, please?"]);
+      return { prompt: "Du möchtest jemanden nach der Uhrzeit fragen. Was sagst du?", kind: "choice", answers: [c], options: shuffle([c, "Excuse me, how much clock is it?", "Excuse me, how late is it?", "Excuse me, what is the clock?"]), explain: "Nach der Uhrzeit fragen: <i>What's the time?</i> oder <i>What time is it?</i> – nie „How late …“ (wörtlich aus dem Deutschen)." }; }
+    const t = (1 + R(12)) * 60, w = HOURS[(t / 60) % 12];
+    return { prompt: `Es ist ${label(t)} Uhr. Wie antwortest du?`, kind: "choice", answers: [`It's ${w} o'clock.`], options: shuffle([`It's ${w} o'clock.`, `It's ${w} clock.`, `Is ${w} o'clock.`, `It's ${w} hours.`]), explain: "<i>It's</i> + Zahl + <i>o'clock</i>." }; },
+  // --- Schulfächer & Stundenplan ---
+  subjDE: () => { const s = pick(SUBJ); return { prompt: `Wie heißt das Schulfach auf Englisch?<br><big>${s[1]}</big>`, answers: subjAns(s[0]), show: s[0], explain: /English|German|French|Latin/.test(s[0]) ? "Sprachen schreibt man im Englischen immer groß." : "" }; },
+  ttWhat: () => { const d = R(5), l = R(6); return { prompt: `${ttHTML()}<big>What is the ${ordWord(l + 1)} lesson on ${WEEK[d]}?</big>`, answers: subjAns(TT[d][l]), show: TT[d][l], label: `Stundenplan: ${ordWord(l + 1)} lesson on ${WEEK[d]}` }; },
+  ttWhen: () => { const l = R(6), t = LESSONS[l]; return { prompt: `${ttHTML()}<big>When does the ${ordWord(l + 1)} lesson start?</big><br>Schreib die Uhrzeit auf Englisch.`, answers: [say(t), digitalStyle(t)], show: `At ${say(t)}.`,
+      clean: s => s.replace(/^(it starts at|it's at|at|it's|it is)\s+/i, ""), explain: timeExplain(t % 60), label: `Stundenplan: ${ordWord(l + 1)} lesson start` }; },
+  ttIsThere: () => { const d = R(5), has = Math.random() < .5, pool = SUBJ.slice(0, 12).map(s => s[0]);
+    const s = has ? pick(TT[d]) : (pool.filter(x => !TT[d].includes(x))[0] || pick(pool)), yes = TT[d].includes(s), c = yes ? "Yes, there is." : "No, there isn't.";
+    return { prompt: `${ttHTML()}<big>Is there ${s} on ${WEEK[d]}?</big>`, kind: "choice", answers: [c], options: shuffle(["Yes, there is.", "No, there isn't.", "Yes, it is.", "No, there aren't."]), label: `Stundenplan: Is there ${s} on ${WEEK[d]}?`, explain: "Frage <i>Is there …?</i> → Antwort <i>Yes, there is. / No, there isn't.</i>" }; },
+  // --- Personalpronomen ---
+  pronReplace: () => { const [n, pr, be, c] = pick([["Anna","she","is","my friend"],["Tom","he","is","in Class 5b"],["My mum","she","is","at work"],["My dad","he","is","in the kitchen"],["The cat","it","is","black"],["The school","it","is","big"],["My friends","they","are","nice"],["The books","they","are","on the desk"],["Tom and I","we","are","in the same class"],["Lucy and I","we","are","good friends"],["You and Ben","you","are","late"],["Mr Smith","he","is","our English teacher"],["Mrs Brown","she","is","nice"],["The teachers","they","are","in the classroom"],["The computer","it","is","new"],["Max and Mia","they","are","twelve"]]);
+    return { prompt: `Ersetze den unterstrichenen Teil durch ein Personalpronomen:<br><big><u>${n}</u> ${be} ${c}.</big><br>→ ___ ${be} ${c}.`, answers: [pr], allowExtra: true, show: `${cap(pr)} ${be} ${c}.`,
+      explain: "Junge/Mann → he · Mädchen/Frau → she · Ding/Tier → it · ich + andere → we · du + andere → you · mehrere → they" }; },
+  pronDE: () => { const [de, en] = pick([["ich","I"],["du","you"],["er","he"],["sie (eine Person, z. B. Anna)","she"],["es","it"],["wir","we"],["ihr","you"],["sie (mehrere Personen)","they"],["er (der Hund)","it"]]);
+    return { prompt: `Wie heißt das Personalpronomen auf Englisch?<br><big>${de}</big>`, answers: [en], cs: en === "I", explain: en === "I" ? "<b>I</b> (ich) schreibt man im Englischen <b>immer groß</b>." : de.includes("Hund") ? "Tiere und Dinge sind meistens <i>it</i>." : "" }; },
+  // --- to be ---
+  beGap: () => { const [s, be] = pick(BE_S), c = compFor(s); return { prompt: `Setze die richtige Form von <i>to be</i> ein (am / is / are):<br><big>${cap(s)} ___ ${c}.</big>`, answers: [be], show: `${cap(s)} ${be} ${c}.`, explain: BE_HELP }; },
+  beShort: () => { const s = pick(PRON), neg = Math.random() < .5, be = s === "I" ? "am" : ["he","she","it"].includes(s) ? "is" : "are";
+    let ans; if (s === "I") ans = neg ? ["I'm not"] : ["I'm"];
+    else if (be === "is") ans = neg ? [`${s} isn't`, `${s}'s not`] : [`${s}'s`];
+    else ans = neg ? [`${s} aren't`, `${s}'re not`] : [`${s}'re`];
+    return { prompt: `Schreib die Kurzform:<br><big>${s} ${be}${neg ? " not" : ""}</big>`, answers: ans, explain: "am → 'm · is → 's · are → 're · is not → isn't · are not → aren't · am not → 'm not (es gibt kein „amn't“!)" }; },
+  beNeg: () => { const [s, be] = pick(BE_S), c = compFor(s), S = cap(s), pron = PRON.includes(s); let ans;
+    if (be === "am") ans = [`I'm not ${c}`, `I am not ${c}`];
+    else if (be === "is") ans = [`${S} isn't ${c}`, `${S} is not ${c}`].concat(pron ? [`${S}'s not ${c}`] : []);
+    else ans = [`${S} aren't ${c}`, `${S} are not ${c}`].concat(pron ? [`${S}'re not ${c}`] : []);
+    return { prompt: `Schreib den Satz verneint (negativ):<br><big>${S} ${be} ${c}.</big>`, answers: ans, show: ans[0] + ".", explain: "Verneinung: <i>not</i> hinter am/is/are → I'm not · he isn't · we aren't" }; },
+  beQ: () => { const [s, be] = pick(BE_S), c = compFor(s), q = `${cap(be)} ${s} ${c}`;
+    return { prompt: `Mach aus dem Satz eine Frage:<br><big>${cap(s)} ${be} ${c}.</big>`, answers: [q], show: q + "?", hints: [[/^\s*(tom|lucy|i|you|he|she|it|we|they|my|the|ben|mr)\b/i, "Bei Fragen steht <b>am / is / are am Anfang</b>: Is Tom …? Are you …?"]], explain: "Frage: Form von <i>to be</i> nach vorne → <i>Is she happy?</i>" }; },
+  beShortAns: () => { const [s, qbe, pr, abe] = pick([["you","are","I","am"],["Tom","is","he","is"],["Lucy","is","she","is"],["your parents","are","they","are"],["the dog","is","it","is"],["you and Tom","are","we","are"],["Mr Smith","is","he","is"],["your sister","is","she","is"],["the children","are","they","are"]]);
+    const c = compFor(s), yes = Math.random() < .5, P = cap(pr); let ans;
+    if (yes) ans = [`Yes ${pr} ${abe}`];
+    else if (abe === "am") ans = ["No I'm not", "No I am not"];
+    else if (abe === "is") ans = [`No ${pr} isn't`, `No ${pr}'s not`, `No ${pr} is not`];
+    else ans = [`No ${pr} aren't`, `No ${pr}'re not`, `No ${pr} are not`];
+    return { prompt: `<big>${cap(qbe)} ${s} ${c}?</big> &nbsp; ${yes ? "✅ ja" : "❌ nein"}<br>Antworte mit einer <b>Kurzantwort</b>.`, answers: ans, show: yes ? `Yes, ${pr} ${abe}.` : `No, ${ans[0].slice(3)}.`,
+      hints: [[/yes,?\s*\w+'(m|s|re)\b/i, "Kurze <b>Ja</b>-Antworten nie verkürzen: „Yes, I am.“ – nicht „Yes, I'm.“"], [/\byou\b/i, s.startsWith("you") ? "Wirst du mit <i>you</i> gefragt, antwortest du mit <i>I</i> (bzw. <i>we</i>)." : ""]],
+      explain: "Kurzantwort: Yes/No + Pronomen + am/is/are (bei No mit not). Namen werden zum Pronomen: Tom → he." }; },
+  // --- Imperativ ---
+  impNeg: () => { const x = pick(NEG_IMP); return { prompt: `Mach daraus ein <b>Verbot</b> (verneinte Aufforderung):<br><big>${cap(x)}.</big>`, answers: [`Don't ${x}`, `Do not ${x}`], show: `Don't ${x}!`, hints: [[/^\s*(not|no)\b/i, "Verbot = <b>Don't</b> + Verb, nicht „Not …“."]], explain: "Verneinter Imperativ: <i>Don't</i> + Grundform des Verbs." }; },
+  impPos: () => { const x = pick(POS_IMP); return { prompt: `Mach daraus eine <b>positive</b> Aufforderung:<br><big>Don't ${x.toLowerCase().replace("pe kit", "PE kit").replace("the cd", "the CD")}.</big>`, answers: [x], show: x + "!", explain: "Positiver Imperativ: einfach die Grundform des Verbs am Satzanfang – ohne <i>you</i>." }; },
+  impOrder: () => { const s = Math.random() < .5 ? pick(POS_IMP) : "Don't " + pick(NEG_IMP); let w = s.split(" "), sh;
+    do { sh = shuffle(w); } while (sh.join(" ") === s && w.length > 1);
+    return { prompt: `Bring die Wörter in die richtige Reihenfolge:<div class="chips">${sh.map(x => `<span>${x}</span>`).join("")}</div>`, answers: [s], show: s + "!", explain: "Imperativ: Verb (oder Don't + Verb) steht am Anfang." }; },
+  impMC: () => { const [sit, c, wr] = pick(IMP_MC); return { prompt: `${sit}<br>Was sagst du?`, kind: "choice", answers: [c], options: shuffle([c, ...wr]), explain: "Imperativ: Grundform des Verbs am Anfang. Verbot: <i>Don't</i> + Verb." }; },
+  // --- there is / there are ---
+  thereWrite: () => { const [S, P, e] = pick(ITEMS), n = randCount(); let ans;
+    if (n === 0) ans = [`There aren't any ${P}`, `There are not any ${P}`, `There are no ${P}`, `There isn't ${art(S)}`, `There is no ${S}`];
+    else if (n === 1) ans = [`There is ${art(S)}`, `There's ${art(S)}`];
+    else ans = [`There are ${numWord(n)} ${P}`, `There are ${n} ${P}`];
+    return { prompt: `<div class="emo">${n ? e.repeat(n) : e + " ❌"}</div><b>${n === 1 ? S : P}: ${n}</b><br>Schreib einen Satz mit <i>There is … / There are … / There aren't any …</i>`, answers: ans, allowExtra: true, show: ans[0] + ".",
+      explain: "Eins: <i>There is a …</i> · Mehrere: <i>There are …</i> · Keine: <i>There aren't any …</i>" }; },
+  thereGap: () => { const [S, P] = pick(ITEMS), n = randCount(), pl = pick(PLACES);
+    const [sent, c] = n === 0 ? [`___ ${P} ${pl}.`, "There aren't any"] : n === 1 ? [`___ ${art(S)} ${pl}.`, "There is"] : [`___ ${numWord(n)} ${P} ${pl}.`, "There are"];
+    return { prompt: `Was passt in die Lücke?<br><big>${sent}</big>`, kind: "choice", answers: [c], options: shuffle(["There is", "There are", "There isn't", "There aren't any"]).map(o => o === "There isn't" && c === "There aren't any" ? "There isn't" : o),
+      explain: "Eins: <i>There is a …</i> · Mehrere: <i>There are …</i> · Keine (Mehrzahl): <i>There aren't any …</i>" }; },
+  thereQ: () => { const [S, P] = pick(ITEMS), pl = pick(PLACES), plural = Math.random() < .5;
+    return { prompt: `Was passt in die Frage?<br><big>___ ${plural ? "any " + P : art(S)} ${pl}?</big>`, kind: "choice", answers: [plural ? "Are there" : "Is there"], options: shuffle(["Is there", "Are there", "There is", "There are"]), explain: "Frage: <i>Is there a …?</i> (eins) · <i>Are there any …?</i> (mehrere)" }; },
+  thereShortAns: () => { const [S, P] = pick(ITEMS), pl = pick(PLACES), plural = Math.random() < .5, yes = Math.random() < .5;
+    const q = plural ? `Are there any ${P} ${pl}?` : `Is there ${art(S)} ${pl}?`;
+    const c = plural ? (yes ? "Yes, there are." : "No, there aren't.") : (yes ? "Yes, there is." : "No, there isn't.");
+    const opts = plural ? ["Yes, there are.", "No, there aren't.", "Yes, they are.", "No, there isn't."] : ["Yes, there is.", "No, there isn't.", "Yes, it is.", "No, there aren't."];
+    return { prompt: `<big>${q}</big> &nbsp; ${yes ? "✅ ja" : "❌ nein"}<br>Wähle die richtige Kurzantwort.`, kind: "choice", answers: [c], options: shuffle(opts), explain: "Is there …? → Yes, there is. / No, there isn't. · Are there …? → Yes, there are. / No, there aren't." }; },
+};
+
+// ================= Themen =================
+const TOPICS = [
+  { key: "numbers", icon: "🔢", title: "Zahlen 1–99", gens: ["numListen","numToWord","wordToNum","numMath"],
+    help: "<ul><li>13–19 enden auf <b>-teen</b>, Zehner auf <b>-ty</b>: fourteen / forty</li><li>Achtung: twelve, thirteen, fifteen, eighteen, twenty, thirty, <b>forty</b> (ohne u!), fifty, eighty</li><li>21–99 mit Bindestrich: twenty-one, forty-five</li></ul>" },
+  { key: "days", icon: "📅", title: "Wochentage", gens: ["dayDE","dayAfter","dayListen"],
+    help: "<ul><li>Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday</li><li>Immer <b>groß</b> schreiben!</li><li>Tuesday und Thursday nicht verwechseln (Tues-day / Thurs-day)</li><li><i>on</i> Monday = am Montag</li></ul>" },
+  { key: "dates", icon: "🎂", title: "Monate & Daten (Geburtstag)", gens: ["monthDE","ordToWord","wordToOrd","birthdayType","birthdayMC","dateListen"],
+    help: "<ul><li>Monate immer <b>groß</b>: January, February, March …</li><li>Ordnungszahlen: 1st first, 2nd second, 3rd third, 4th fourth, 5th fifth, 8th eighth, 9th ninth, 12th twelfth, 20th twentieth, 21st twenty-first</li><li><i>My birthday is <b>on</b> the 3rd <b>of</b> May.</i> – nur Monat: <i><b>in</b> May</i></li></ul>" },
+  { key: "time", icon: "🕒", title: "Uhrzeit (the time)", gens: ["timeWrite","timeListen","timeRead","timeAsk"],
+    help: "<ul><li>Fragen: <i>What's the time?</i> / <i>What time is it?</i></li><li>Antwort: <i>It's …</i></li><li>o'clock = volle Stunde · past = nach (bis :30) · to = vor (ab :31, nächste Stunde!)</li><li>half past seven = 7:30 (nicht „halb sieben“!) · quarter to two = 1:45</li><li>Langer Zeiger = Minuten, kurzer Zeiger = Stunden</li></ul>" },
+  { key: "listening", icon: "🎧", title: "Hörverstehen: Uhrzeiten-Geschichte", custom: renderListening },
+  { key: "subjects", icon: "📚", title: "Schulfächer & Stundenplan", gens: ["subjDE","subjDE","ttWhat","ttWhen","ttIsThere"], prep: () => TT = makeTT(),
+    help: "<ul><li>Maths, English, German, French, Art, Music, PE (Sport), Biology, Geography (Erdkunde), History (Geschichte), RE (Religion), Science</li><li>Sprachen immer groß</li><li><i>The first lesson on Monday is Maths.</i> · <i>The lesson starts at five to eight.</i></li></ul>" },
+  { key: "pronouns", icon: "👥", title: "Personalpronomen", gens: ["pronReplace","pronReplace","pronDE"],
+    help: "<ul><li>I (ich – immer groß!), you (du), he (er), she (sie), it (es), we (wir), you (ihr), they (sie, Mehrzahl)</li><li>Dinge und Tiere → <b>it</b></li><li>Tom and I → <b>we</b> · you and Ben → <b>you</b></li></ul>" },
+  { key: "tobe", icon: "✅", title: "Verb „to be“", gens: ["beGap","beShort","beNeg","beQ","beShortAns"],
+    help: "<ul><li>I <b>am</b> (I'm) · you <b>are</b> (you're) · he/she/it <b>is</b> (he's) · we/you/they <b>are</b> (we're)</li><li>Verneint: I'm not · he isn't · we aren't</li><li>Frage: <i>Are you hungry?</i> – <i>Yes, I am. / No, I'm not.</i></li><li>Kurze Ja-Antwort <b>nie</b> verkürzen: <i>Yes, I am.</i> (nicht Yes, I'm.)</li></ul>" },
+  { key: "imperative", icon: "📢", title: "Imperativ (Aufforderungen)", gens: ["impNeg","impPos","impOrder","impMC"],
+    help: "<ul><li>Aufforderung: Grundform am Anfang – <i>Open your books!</i></li><li>Verbot: <b>Don't</b> + Grundform – <i>Don't run!</i></li><li>Höflicher mit <i>please</i>: <i>Sit down, please.</i></li></ul>" },
+  { key: "there", icon: "🏫", title: "there is / there are", gens: ["thereWrite","thereGap","thereQ","thereShortAns"],
+    help: "<ul><li>Eins: <i>There is a clock.</i> (There's)</li><li>Mehrere: <i>There are three windows.</i></li><li>Keine: <i>There aren't any computers.</i> / <i>There isn't a clock.</i></li><li>Frage: <i>Is there a …? / Are there any …?</i> – <i>Yes, there is. / No, there aren't.</i></li></ul>" },
+  { key: "writing", icon: "✍️", title: "Einen kleinen Text schreiben", custom: renderWriting },
+  { key: "mix", icon: "📝", title: "Probe-Klassenarbeit (alles gemischt)", mix: true, n: 20, prep: () => TT = makeTT() },
+];
+
+// ================= Sprachausgabe =================
+const synth = window.speechSynthesis;
+let voices = [], speakId = 0;
+function loadVoices() {
+  if (!synth) return;
+  voices = synth.getVoices().filter(v => v.lang.toLowerCase().startsWith("en"));
+  voices.sort((a, b) => (b.lang === "en-GB") - (a.lang === "en-GB"));
+  $("voice").innerHTML = voices.map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join("") || "<option>Standard</option>";
+}
+if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+function utter(text) {
+  const u = new SpeechSynthesisUtterance(text), v = voices[+$("voice").value];
+  if (v) u.voice = v; u.lang = v ? v.lang : "en-GB"; u.rate = +$("rate").value; return u;
+}
+function speak(text) { if (!synth) return; speakId++; synth.cancel(); synth.speak(utter(text)); }
+function stopSpeech() { speakId++; if (synth) synth.cancel(); }
+
+// ================= Quiz-Engine =================
+let Q = null;
+const norm = s => s.replace(/[’‘`´]/g, "'").replace(/-/g, " ").replace(/[.,!?;:]/g, " ").replace(/\s+/g, " ").trim();
+const strip = h => h.replace(/<table[\s\S]*?<\/table>/g, "").replace(/<svg[\s\S]*?<\/svg>/g, "🕒 ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+function showHome() {
+  stopSpeech();
+  $("app").innerHTML = `<div class="panel"><h2>Was möchtest du üben?</h2><p class="muted">Die Vokabeln der Unit 1 sind nicht dabei – die bitte mit dem Buch üben.</p>
+    <div class="topics">${TOPICS.map(t => `<button class="topic ${t.mix ? "mix" : ""}" data-k="${t.key}"><span class="ic">${t.icon}</span>${t.title}</button>`).join("")}</div></div>`;
+  document.querySelectorAll(".topic").forEach(b => b.onclick = () => openTopic(b.dataset.k));
+}
+
+function openTopic(k, retry) {
+  stopSpeech();
+  const t = TOPICS.find(x => x.key === k);
+  $("app").innerHTML = `<div class="panel"><div class="row" style="justify-content:space-between"><h2>${t.icon} ${t.title}</h2><button id="home">← Übersicht</button></div>
+    ${t.help ? `<details><summary>Merkhilfe</summary><div class="help">${t.help}</div></details>` : ""}</div><div class="panel" id="area"></div>`;
+  $("home").onclick = showHome;
+  if (t.custom) return t.custom($("area"));
+  if (t.prep && !retry) t.prep();
+  const gens = t.mix ? Object.keys(G) : t.gens, n = t.n || 10, qs = [], seen = new Set();
+  if (retry) retry.forEach(q => qs.push(Object.assign({}, q)));
+  else for (let tries = 0; qs.length < n && tries < 300; tries++) {
+    const g = t.mix ? gens[qs.length % gens.length === 0 ? R(gens.length) : R(gens.length)] : gens[qs.length % gens.length];
+    const q = G[t.mix ? pick(gens) : g](); q.kind = q.kind || "text";
+    const id = strip(q.prompt) + (q.speak || "");
+    if (seen.has(id)) continue; seen.add(id); qs.push(q);
+  }
+  Q = { topic: t, qs: retry ? qs : shuffle(qs), i: 0, res: [] };
+  renderQ();
+}
+
+function renderQ() {
+  const q = Q.qs[Q.i], n = Q.qs.length, ok = Q.res.filter(r => r.ok).length;
+  Q.checked = false;
+  $("area").innerHTML = `<div class="progress"><span>Frage ${Q.i + 1} von ${n}</span><span>✓ ${ok} richtig</span></div>
+    <div class="bar"><div style="width:${100 * Q.i / n}%"></div></div>
+    <div class="prompt">${q.prompt}</div>
+    ${q.speak ? `<p><button id="spk">🔊 Anhören</button></p>` : ""}
+    ${q.kind === "choice" ? `<div class="opts">${q.options.map((o, i) => `<button class="opt" data-i="${i}">${o}</button>`).join("")}</div>`
+      : `<div class="row"><input class="ans" id="ans" autocomplete="off" spellcheck="false" placeholder="Antwort eingeben …"><button class="primary" id="chk">Prüfen</button></div>`}
+    <div id="fb"></div>`;
+  if (q.speak) { $("spk").onclick = () => speak(q.speak); setTimeout(() => speak(q.speak), 300); }
+  if (q.kind === "choice") document.querySelectorAll(".opt").forEach(b => b.onclick = () => check(q.options[+b.dataset.i], b));
+  else { $("ans").focus(); $("chk").onclick = () => check($("ans").value); $("ans").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); check($("ans").value); } }; }
+}
+
+function check(user, btn) {
+  if (Q.checked) return;
+  const q = Q.qs[Q.i];
+  if (q.kind === "text" && !user.trim()) return;
+  Q.checked = true;
+  const cl = s => q.clean ? q.clean(norm(s)) : norm(s);
+  const u = cl(user), A = q.answers.map(cl), lc = s => s.toLowerCase();
+  const match = (a, b) => a === b || (q.allowExtra && b.startsWith(a + " "));
+  let ok = A.some(a => q.cs ? match(a, u) : match(lc(a), lc(u)));
+  const capsHint = !ok && q.cs && A.some(a => match(lc(a), lc(u)));
+  const hint = !ok && q.hints ? (q.hints.find(([re, m]) => m && re.test(user)) || [])[1] : null;
+  const show = q.show || q.answers[0];
+  Q.res.push({ q, ok, user });
+  if (q.kind === "choice") document.querySelectorAll(".opt").forEach(b => { b.disabled = true; if (b.textContent === q.answers[0]) b.classList.add("ok"); else if (b === btn) b.classList.add("bad"); });
+  else { $("ans").disabled = true; $("chk").disabled = true; }
+  $("fb").innerHTML = `<div class="fb ${ok ? "ok" : "bad"}">${ok ? "✓ <b>Richtig!</b>" + (q.kind === "text" && lc(norm(show)) !== lc(u) ? ` Musterlösung: <b>${show}</b>` : "") : `✗ <b>Leider falsch.</b> Richtig: <b>${show}</b>`}
+    ${capsHint ? `<div class="ex">⚠️ Fast! Achte auf die <b>Großschreibung</b>.</div>` : ""}${hint ? `<div class="ex">💡 ${hint}</div>` : ""}
+    ${q.explain && !ok ? `<div class="ex">${q.explain}</div>` : ""}</div>
+    <p><button class="primary" id="next">${Q.i + 1 < Q.qs.length ? "Weiter ➜" : "Ergebnis anzeigen"}</button> <span class="muted">(oder Enter)</span></p>`;
+  $("next").onclick = next; $("next").focus();
+}
+function next() { stopSpeech(); Q.i++; if (Q.i < Q.qs.length) renderQ(); else renderResult(); }
+
+function renderResult() {
+  const n = Q.res.length, ok = Q.res.filter(r => r.ok).length, wrong = Q.res.filter(r => !r.ok), p = Math.round(100 * ok / n);
+  const msg = p === 100 ? "🏆 Perfekt!" : p >= 80 ? "🎉 Super!" : p >= 60 ? "👍 Gut – noch ein bisschen üben." : "💪 Weiter üben, du schaffst das!";
+  $("area").innerHTML = `<div class="big-result">${ok} von ${n} richtig (${p} %) – ${msg}</div>
+    ${wrong.length ? `<h3>Das solltest du nochmal üben:</h3><ul class="wrong-list">${wrong.map(r => `<li>${r.q.label || strip(r.q.prompt)}<br><span class="muted">Deine Antwort: ${r.user || "–"}</span> → <b>${r.q.show || r.q.answers[0]}</b></li>`).join("")}</ul>` : ""}
+    <div class="row" style="margin-top:12px"><button class="primary" id="again">Neue Runde</button>${wrong.length ? `<button id="retry">Nur Fehler wiederholen</button>` : ""}<button id="home2">Übersicht</button></div>`;
+  $("again").onclick = () => openTopic(Q.topic.key);
+  if (wrong.length) $("retry").onclick = () => openTopic(Q.topic.key, wrong.map(r => r.q));
+  $("home2").onclick = showHome;
+}
+document.addEventListener("keydown", e => { if (e.key === "Enter" && Q && Q.checked && $("next")) { e.preventDefault(); next(); } });
+
+// ================= Hörverstehen (Geschichte) =================
+const LS_PEOPLE = [["Tom","he","his"],["Emma","she","her"],["Ben","he","his"],["Lucy","she","her"],["Max","he","his"],["Mia","she","her"],["Jack","he","his"],["Sophie","she","her"]];
+const LS_FRIENDS = ["Sam","Lily","Noah","Anna","Leo","Grace","Finn","Ella"];
+const LS_ACTS = [
+  [6, 9, 0, ["{N} wakes up at {T}.", "At {T}, {N}'s alarm clock rings and {h} wakes up."]],
+  [6, 9, 1, ["{H} brushes {his} teeth at {T}.", "At {T}, {N} takes a quick shower."]],
+  [6, 10, 2, ["At {T}, {N} has breakfast with {his} family.", "{N} eats cornflakes for breakfast at {T}."]],
+  [7, 18, 3, ["At {T}, {h} walks the dog.", "{N} takes the dog for a walk at {T}."]],
+  [9, 17, 4, ["At {T}, {h} meets {his} friend {F} at the park.", "{N} meets {F} in front of the school at {T}."]],
+  [9, 18, 4, ["{H} plays football with {his} friends at {T}.", "At {T}, {N} rides {his} bike to the lake."]],
+  [10, 17, 5, ["At {T}, {h} goes to the library.", "{N} visits {his} grandma at {T}."]],
+  [10, 18, 5, ["At {T}, {N} goes swimming with {his} sister.", "{H} goes shopping with {his} dad at {T}."]],
+  [11, 14, 6, ["{N} has lunch at {T}.", "At {T}, the family eats pizza for lunch."]],
+  [13, 19, 7, ["At {T}, {h} does {his} homework.", "{N} learns new English words at {T}."]],
+  [13, 20, 7, ["{H} plays video games at {T}.", "At {T}, {N} reads a comic in {his} room."]],
+  [15, 17, 8, ["At {T}, {h} eats a piece of cake.", "{N} has a snack at {T}."]],
+  [16, 19, 9, ["At {T}, {h} helps {his} mum in the kitchen.", "{N} tidies up {his} room at {T}."]],
+  [17, 20, 10, ["{H} has dinner with {his} family at {T}.", "At {T}, it is time for dinner."]],
+  [18, 21, 11, ["At {T}, {h} watches a film.", "{N} plays a board game with {his} parents at {T}."]],
+  [19, 22, 12, ["{N} is very tired. {H} goes to bed at {T}.", "At {T}, {N} goes to bed and falls asleep."]],
+];
+let LS = null;
+function lsTimes(n, level) {
+  const step = level === 1 ? 30 : level === 2 ? 15 : 5;
+  for (let tries = 0; tries < 500; tries++) {
+    const set = new Set(); while (set.size < n * 3) set.add(360 + R(900 / step + 1) * step);
+    const c = shuffle([...set]).slice(0, n).sort((a, b) => a - b);
+    if (c.every((t, i) => i === 0 || t - c[i - 1] >= 40) && new Set(c.map(key)).size === n) return c;
+  }
+  return Array.from({ length: n }, (_, i) => 360 + Math.round(i * 900 / n / step) * step);
+}
+function lsStory(times) {
+  const [N, h, his] = pick(LS_PEOPLE), F = pick(LS_FRIENDS), day = pick(DAYS.map(d => d[0])), used = new Set(); let last = -1;
+  const sents = times.map((t, k) => {
+    const hr = t / 60, fit = LS_ACTS.map((a, i) => i).filter(i => !used.has(i) && hr >= LS_ACTS[i][0] && hr <= LS_ACTS[i][1]);
+    let good = fit.filter(i => LS_ACTS[i][2] >= last); const isLast = k === times.length - 1, noBed = good.filter(i => LS_ACTS[i][2] !== 12);
+    if (!isLast && noBed.length) good = noBed; if (isLast && good.some(i => LS_ACTS[i][2] === 12)) good = good.filter(i => LS_ACTS[i][2] === 12);
+    const i = good.length ? pick(good) : fit.length ? pick(fit) : null;
+    let s = i === null ? "At {T}, {h} has a short break." : (used.add(i), last = Math.max(last, LS_ACTS[i][2]), pick(LS_ACTS[i][3]));
+    s = s.replace(/\{N\}/g, N).replace(/\{H\}/g, cap(h)).replace(/\{h\}/g, h).replace(/\{his\}/g, his).replace(/\{F\}/g, F);
+    const p = s.split("{T}");
+    return { text: cap(p.join(say(t))), html: cap(p.join("<b>" + say(t) + "</b>")), t };
+  });
+  return { title: `${N}'s ${day}`, intro: `This is ${N}'s ${day}.`, sents };
+}
+function renderListening(el) {
+  el.innerHTML = `<div class="row">
+      <label>Schwierigkeit <select id="lsLevel"><option value="1">1 – o'clock, half past</option><option value="2" selected>2 – + quarter past / to</option><option value="3">3 – + five, ten, twenty …</option></select></label>
+      <label>Anzahl <select id="lsCount"><option>5</option><option>6</option><option selected>8</option><option>10</option></select></label>
+      <label>Anzeige <select id="lsDisp"><option value="digital">Digital</option><option value="analog">Analoge Uhr</option><option value="both" selected>Beides</option></select></label>
+      <button class="primary" id="lsNew">Neue Geschichte</button></div>
+    <div class="row" style="margin-top:14px"><button class="primary" id="lsPlay">▶ Text vorlesen lassen</button><button id="lsStop">■ Stopp</button><button id="lsToggle">Text für Eltern anzeigen</button></div>
+    <div id="lsBox" class="hidden" style="margin-top:12px"><div id="lsStory"></div></div>
+    <p style="font-size:18px;margin-top:18px"><b>Listen to the text. In which order do you hear the times?</b></p>
+    <p class="muted">Klicke die Uhrzeiten in der Reihenfolge an, in der du sie hörst. Nochmal klicken = Nummer entfernen. Nicht alle Uhrzeiten kommen vor!</p>
+    <div class="grid" id="lsGrid"></div>
+    <div class="row" style="margin-top:16px"><button class="primary" id="lsCheck">✓ Prüfen</button><button id="lsReset">Auswahl löschen</button></div>
+    <div class="big-result" id="lsResult" style="font-size:20px"></div><div id="lsSol"></div>`;
+  const newEx = () => {
+    stopSpeech();
+    const lv = +$("lsLevel").value, n = +$("lsCount").value, times = lsTimes(n, lv), story = lsStory(times);
+    const used = new Set(times.map(key)), dis = [];
+    for (const c of shuffle(times.flatMap(timeConfusions))) { if (dis.length >= Math.max(3, Math.round(n / 2))) break; if (!used.has(key(c))) { used.add(key(c)); dis.push(c); } }
+    LS = { story, cards: shuffle([...times.map((t, i) => ({ t, c: i + 1 })), ...dis.map(t => ({ t, c: 0 }))]), picks: [], checked: false };
+    $("lsStory").innerHTML = `<p><b style="color:inherit">${story.title}</b></p><p><span data-i="-1">${story.intro}</span> ` + story.sents.map((x, i) => `<span data-i="${i}">${x.html}</span>`).join(" ") + "</p>";
+    $("lsResult").textContent = ""; $("lsSol").innerHTML = ""; $("lsCheck").disabled = false; grid();
+  };
+  const grid = () => {
+    const d = $("lsDisp").value;
+    $("lsGrid").innerHTML = LS.cards.map((c, i) => {
+      const p = LS.picks.indexOf(i); let cls = "card", fix = "";
+      if (LS.checked) {
+        if (c.c && p + 1 === c.c) { cls += " ok"; fix = "richtig ✓"; }
+        else if (c.c && p >= 0) { cls += " bad"; fix = "richtig wäre: " + c.c; }
+        else if (c.c) { cls += " missed"; fix = "vergessen – Nr. " + c.c; }
+        else { if (p >= 0) cls += " bad"; fix = "kam nicht vor"; }
+      } else if (p >= 0) cls += " sel";
+      return `<div class="${cls}" data-i="${i}">${p >= 0 ? `<div class="badge">${p + 1}</div>` : ""}${d !== "digital" ? clockSVG(c.t) : ""}${d !== "analog" ? `<div class="digital">${label(c.t)}</div>` : ""}${fix ? `<div class="fix">${fix}</div>` : ""}</div>`;
+    }).join("");
+  };
+  const hl = i => document.querySelectorAll("#lsStory span").forEach(s => s.classList.toggle("cur", i !== null && +s.dataset.i === i));
+  $("lsGrid").onclick = e => { const c = e.target.closest(".card"); if (!c || LS.checked) return; const i = +c.dataset.i, p = LS.picks.indexOf(i); p >= 0 ? LS.picks.splice(p, 1) : LS.picks.push(i); grid(); };
+  $("lsCheck").onclick = () => {
+    LS.checked = true; grid(); const tot = LS.story.sents.length;
+    const r = LS.cards.filter((c, i) => c.c && LS.picks.indexOf(i) + 1 === c.c).length, w = LS.cards.filter((c, i) => !c.c && LS.picks.includes(i)).length;
+    $("lsResult").textContent = `${r} von ${tot} richtig${w ? `, ${w} falsche Uhrzeit(en) gewählt` : ""}. ${r === tot && !w ? "🎉 Perfekt!" : r >= tot * .7 ? "👍 Gut gemacht!" : "💪 Weiter üben!"}`;
+    $("lsSol").innerHTML = `<table class="sol"><tr><th>Nr.</th><th>Gesprochen</th><th>Uhrzeit</th></tr>${LS.story.sents.map((s, i) => `<tr><td>${i + 1}</td><td>${say(s.t)}</td><td>${label(s.t)}</td></tr>`).join("")}</table>`;
+    $("lsCheck").disabled = true;
+  };
+  $("lsReset").onclick = () => { LS.picks = []; LS.checked = false; $("lsResult").textContent = ""; $("lsSol").innerHTML = ""; $("lsCheck").disabled = false; grid(); };
+  $("lsNew").onclick = newEx; $("lsDisp").onchange = grid;
+  $("lsToggle").onclick = () => { const b = $("lsBox"); b.classList.toggle("hidden"); $("lsToggle").textContent = b.classList.contains("hidden") ? "Text für Eltern anzeigen" : "Text verstecken"; };
+  $("lsStop").onclick = () => { stopSpeech(); hl(null); };
+  $("lsPlay").onclick = () => {
+    if (!synth) return alert("Dieser Browser kann nicht vorlesen – bitte Text anzeigen und selbst vorlesen.");
+    stopSpeech(); const id = speakId, s = LS.story, parts = [{ text: s.intro, i: -1 }, ...s.sents.map((x, i) => ({ text: x.text, i }))]; let k = 0;
+    const nx = () => { if (id !== speakId) return; if (k >= parts.length) return hl(null); const p = parts[k++], u = utter(p.text);
+      u.onstart = () => hl(p.i); u.onend = () => setTimeout(nx, 900); u.onerror = () => setTimeout(nx, 200); synth.speak(u); };
+    nx();
+  };
+  newEx();
+}
+
+// ================= Schreiben =================
+const WRITE = [
+  { title: "About me", task: "Schreib über dich: Name, Alter, Geburtstag, Klasse, Lieblingsfach und Lieblingstag. Schreib auch, was du <b>nicht</b> bist.",
+    words: ["My name is …", "I'm … years old.", "My birthday is on the … of …", "I'm in Class …", "My favourite subject is …", "My favourite day is … because …", "I'm not …"],
+    checks: [["Name (My name is …)", /my name is|i'm [A-Z]|i am [A-Z]/], ["Alter (… years old)", /years old/i], ["Geburtstag (on the … of …)", /birthday is on the .+ of [A-Z]/], ["Lieblingsfach", /favourite subject|favorite subject/i], ["Ein Wochentag (groß geschrieben)", /Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/], ["Eine verneinte Aussage (I'm not / isn't / aren't)", /i'm not|i am not|isn't|aren't|is not|are not/i]],
+    model: "Hi! My name is Paul and I'm eleven years old.\nMy birthday is on the twenty-third of April.\nI'm in Class 5b at Goethe School.\nMy favourite subject is PE. I'm not good at Maths, but I'm good at English.\nMy favourite day is Friday because there is Art and PE." },
+  { title: "My school day", task: "Beschreibe einen Schultag aus deinem Stundenplan: Wochentag, Fächer, Uhrzeiten.",
+    words: ["On Monday, the first lesson is …", "It starts at …", "The second lesson is …", "At quarter to ten there is a break.", "School ends at …", "My favourite lesson is …"],
+    checks: [["Ein Wochentag", /Monday|Tuesday|Wednesday|Thursday|Friday/], ["first / second / third lesson", /(first|second|third|fourth|fifth|sixth) lesson/i], ["Eine Uhrzeit auf Englisch (past / to / o'clock)", /past|\bto (one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b|o'clock/i], ["Mindestens zwei Schulfächer", /(Maths|English|German|French|Art|Music|PE|Biology|Geography|History|RE|Science).*(Maths|English|German|French|Art|Music|PE|Biology|Geography|History|RE|Science)/s], ["there is / there are", /there is|there's|there are/i]],
+    model: "On Tuesday, the first lesson is Maths. It starts at five to eight.\nThe second lesson is English. I like English!\nAt half past nine there is a break.\nThen there are two lessons of Biology.\nThe last lesson is Music. School ends at quarter past one." },
+  { title: "My classroom", task: "Beschreibe dein Klassenzimmer (oder dein Zimmer). Was gibt es, was gibt es nicht?",
+    words: ["There is a …", "There are … chairs.", "There aren't any …", "There isn't a …", "The board is …", "My desk is next to …"],
+    checks: [["There is a … / There's a …", /there is an? |there's an? /i], ["There are + Zahl", /there are (two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d|[a-z]+ty)/i], ["Etwas, das es nicht gibt (There aren't any / There isn't a)", /there aren't any|there are no|there isn't an?|there is no/i], ["Eine Zahl als Wort", /\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|twenty|thirty)\b/i]],
+    model: "My classroom is big and nice.\nThere are twenty-four chairs and twelve desks.\nThere is a big board and there is a clock on the wall.\nThere are three windows and two plants.\nThere aren't any computers in our classroom, and there isn't a TV." },
+  { title: "Our school rules", task: "Schreib mindestens 5 Schulregeln – mindestens 2 davon als Verbot (Don't …).",
+    words: ["Be quiet in the library.", "Don't run in the corridor.", "Wear …", "Don't wear …", "Put up your hand.", "Don't eat in class.", "Bring your …"],
+    checks: [["Mindestens 2 Verbote (Don't …)", /(don't|do not)[\s\S]*(don't|do not)/i], ["Eine positive Regel (Verb am Satzanfang)", /(^|[.!]\s*)(Be|Wear|Bring|Put|Listen|Open|Close|Sit|Stand|Look|Read|Write|Help|Clean|Come|Say)\b/m], ["Mindestens 5 Sätze", t => (t.match(/[.!]/g) || []).length >= 5]],
+    model: "Our school rules:\nBe on time for lessons.\nDon't run in the corridor.\nWear black shoes. Don't wear trainers in the classroom!\nPut up your hand in class.\nDon't use your mobile phone in lessons.\nBe nice to your classmates." },
+  { title: "My best friend", task: "Schreib über deine beste Freundin / deinen besten Freund: Name, Alter, Geburtstag, wie er/sie ist und was er/sie nicht ist.",
+    words: ["My best friend is …", "He / She is … years old.", "His / Her birthday is on the …", "He / She is nice / funny / good at …", "He / She isn't …", "We are in the same class."],
+    checks: [["he is / she is (he's / she's)", /\b(he|she) is\b|\b(he|she)'s\b/i], ["Eine Verneinung (isn't / aren't)", /isn't|aren't|is not|are not/i], ["Alter", /years old/i], ["Geburtstag (on the … of …)", /birthday is on the .+ of [A-Z]/], ["we are / we're", /\bwe are\b|\bwe're\b/i]],
+    model: "My best friend is Leon. He is twelve years old.\nHis birthday is on the second of September.\nHe is funny and he is good at football. He isn't good at Art.\nWe are in the same class. We aren't in the same team, but we are friends!" },
+];
+function renderWriting(el) {
+  let w = WRITE[0];
+  el.innerHTML = `<div class="row"><label>Thema <select id="wSel">${WRITE.map((x, i) => `<option value="${i}">${x.title}</option>`).join("")}</select></label><button id="wRand">🎲 Zufälliges Thema</button></div>
+    <div id="wTask" style="margin:14px 0;font-size:17px"></div>
+    <details style="margin-bottom:10px"><summary>Satzbausteine (Hilfe)</summary><div id="wWords" class="chips" style="margin-top:6px"></div></details>
+    <textarea id="wText" placeholder="Schreib hier deinen Text auf Englisch …" spellcheck="false"></textarea>
+    <div class="row" style="margin-top:8px;justify-content:space-between"><span class="muted" id="wCount">0 Wörter (Ziel: mindestens 40)</span>
+      <span><button class="primary" id="wCheck">Checkliste prüfen</button> <button id="wModel">Mustertext zeigen</button></span></div>
+    <div id="wOut" style="margin-top:12px"></div>
+    <p class="muted">Hinweis: Die Checkliste prüft nur, ob die wichtigen Bausteine vorkommen – Rechtschreibung und Grammatik bitte gemeinsam durchlesen.</p>`;
+  const set = i => { w = WRITE[i]; $("wSel").value = i; $("wTask").innerHTML = `<b>${w.title}</b> – ${w.task}`; $("wWords").innerHTML = w.words.map(x => `<span>${x}</span>`).join(""); $("wOut").innerHTML = ""; };
+  $("wSel").onchange = () => set(+$("wSel").value);
+  $("wRand").onclick = () => set(R(WRITE.length));
+  $("wText").oninput = () => { const n = ($("wText").value.match(/[A-Za-z']+/g) || []).length; $("wCount").textContent = `${n} Wörter (Ziel: mindestens 40)`; };
+  $("wCheck").onclick = () => {
+    const t = $("wText").value, n = (t.match(/[A-Za-z']+/g) || []).length;
+    const items = w.checks.map(([l, re]) => [l, typeof re === "function" ? re(t) : re.test(t)]).concat([["Mindestens 40 Wörter", n >= 40], ["„I“ immer groß geschrieben", !/(^|\s)i(\s|'m)/.test(t)]]);
+    const ok = items.filter(x => x[1]).length;
+    $("wOut").innerHTML = `<b>${ok} von ${items.length} Punkten erfüllt</b><ul class="checklist">${items.map(([l, v]) => `<li>${v ? "✅" : "⬜"} ${l}</li>`).join("")}</ul>`;
+  };
+  $("wModel").onclick = () => { $("wOut").innerHTML += `<h3>Mustertext</h3><div class="model">${w.model}</div>`; };
+  set(0);
+}
+
+showHome();
+</script>
+</body>
+</html>

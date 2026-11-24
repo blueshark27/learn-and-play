@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uhr lesen lernen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Lernwelt für Kinder: helles Papier; Stunden sind überall BLAU, Minuten überall ROT (Uhr, Digitalanzeige, Texte) */
+  --paper:#eef3f9; --card:#ffffff; --ink:#1c2738; --muted:#56667d; --line:#d5deea;
+  --hour:#1f5fd6; --hour-soft:#e3ecfc; --minute:#d3332a; --minute-soft:#fde9e7;
+  --good:#16804a; --good-soft:#e1f4e9; --bad:#b9470f; --bad-soft:#fff0e3; --star:#f0ad00;
+  --display:"Fredoka","Nunito",system-ui,sans-serif; --body:"Nunito",system-ui,sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.5}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.lvl:focus-visible{outline:3px solid var(--hour);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 18px 40px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,40px);margin:0;letter-spacing:.2px;text-wrap:balance}
+h1 .h{color:var(--hour)} h1 .m{color:var(--minute)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-weight:700;font-size:16px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;height:6px;border-radius:3px}
+.legend .lh i{width:22px;height:9px;background:var(--hour)}
+.legend .lm i{width:36px;background:var(--minute)}
+
+/* Level-Auswahl */
+.levels{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.lvl{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 10px;text-align:left;display:flex;flex-direction:column;gap:2px;min-height:78px}
+.lvl .num{font-size:13px;color:var(--muted);font-weight:700}
+.lvl .nm{font-family:var(--display);font-weight:600;font-size:17px;line-height:1.15}
+.lvl .st{font-size:15px;color:var(--line);letter-spacing:1px}
+.lvl .st b{color:var(--star);font-weight:400}
+.lvl[aria-pressed="true"]{border-color:var(--hour);background:var(--hour-soft)}
+@media (max-width:760px){.levels{grid-template-columns:repeat(3,1fr)}}
+
+/* Modus-Tabs */
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:8px 18px;font-weight:800}
+.tab[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* Bühne */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){.stage{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px}
+.clock-col{display:flex;flex-direction:column;align-items:center;gap:14px}
+.clock-wrap{width:min(100%,430px);aspect-ratio:1}
+svg.clock{width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none}
+svg.clock.interactive{touch-action:none;cursor:grab}
+svg.clock .ring-band{fill:var(--minute-soft)}
+svg.clock .face{fill:#fff;stroke:var(--ink);stroke-width:3.5}
+svg.clock .tick{stroke:#9aa7b8;stroke-width:1.2}
+svg.clock .tick.major{stroke:var(--ink);stroke-width:3}
+svg.clock .hnum{fill:var(--hour);font-family:var(--display);font-weight:600;font-size:22px;text-anchor:middle;dominant-baseline:central}
+svg.clock .mnum{fill:var(--minute);font-family:var(--display);font-weight:600;font-size:13px;text-anchor:middle;dominant-baseline:central}
+svg.clock.no-ring .mring{display:none}
+svg.clock.no-ring .ring-band{fill:transparent}
+svg.clock .hand .hand-line{stroke-linecap:round}
+svg.clock .hand.hour .hand-line{stroke:var(--hour);stroke-width:10}
+svg.clock .hand.minute .hand-line{stroke:var(--minute);stroke-width:5.5}
+svg.clock .hit{stroke:transparent;stroke-width:26;stroke-linecap:round}
+svg.clock:not(.interactive) .hit{display:none}
+svg.clock .hub{fill:var(--ink)} svg.clock .hub-dot{fill:#fff}
+svg.clock.interactive.drag-hour .hand.hour .hand-line{stroke-width:12}
+svg.clock.interactive.drag-minute .hand.minute .hand-line{stroke-width:7}
+
+.adjust{display:grid;grid-template-columns:repeat(2,auto);gap:8px 18px;justify-content:center}
+.adjust .grp{display:flex;align-items:center;gap:6px;font-weight:800;font-size:15px}
+.adjust .grp.h{color:var(--hour)} .adjust .grp.m{color:var(--minute)}
+.adjust button{width:42px;height:42px;border-radius:12px;border:2px solid currentColor;background:#fff;font-size:22px;font-weight:800;line-height:1;color:inherit}
+.drag-tip{font-size:14px;color:var(--muted);text-align:center;margin:0}
+
+.dig{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:1px;white-space:nowrap}
+.dig .h,.h{color:var(--hour)} .dig .m,.m{color:var(--minute)}
+b.h,b.m{font-weight:800}
+.digital-box{background:var(--ink);color:#fff;border-radius:16px;padding:6px 22px;display:inline-flex;align-items:center;justify-content:center}
+.digital-box .dig{font-size:clamp(46px,8vw,68px)}
+.digital-box .dig .h{color:#8fb4ff} .digital-box .dig .m{color:#ff8a80}
+.digital-box.small .dig{font-size:34px}
+.readout{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.phrase{font-family:var(--display);font-size:22px;font-weight:600}
+.alt{color:var(--muted);font-size:15px}
+
+.panel{display:flex;flex-direction:column;gap:14px}
+.panel h2{font-family:var(--display);font-weight:600;font-size:26px;margin:0}
+.steps{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px;max-width:62ch}
+.steps li::before{content:counter(s);font-family:var(--display);font-weight:700;width:28px;height:28px;border-radius:50%;background:var(--hour-soft);color:var(--hour);display:grid;place-items:center;font-size:16px;margin-top:1px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{border:2px solid var(--line);background:#fff;border-radius:12px;padding:4px 12px}
+.chip .dig{font-size:20px}
+.chip[aria-pressed="true"]{border-color:var(--ink)}
+.table24{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px;font-size:15px}
+.table24 div{background:var(--paper);border-radius:10px;padding:4px 8px;text-align:center;font-variant-numeric:tabular-nums}
+.table24 .dig{font-size:16px}
+.label{font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-size:13px}
+.task{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.daypart{font-weight:800;font-size:17px;padding:2px 12px;border-radius:999px;background:var(--hour-soft);color:var(--hour)}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{border-radius:14px;padding:12px 20px;font-weight:800;border:2px solid var(--line);background:#fff;font-size:18px}
+.btn.primary{background:var(--good);border-color:var(--good);color:#fff}
+.btn.next{background:var(--hour);border-color:var(--hour);color:#fff}
+.btn[hidden]{display:none}
+.feedback{border-radius:14px;padding:12px 16px;font-size:18px;display:none}
+.feedback.show{display:block}
+.feedback.good{background:var(--good-soft);border:2px solid var(--good)}
+.feedback.bad{background:var(--bad-soft);border:2px solid var(--bad)}
+.feedback.info{background:var(--hour-soft);border:2px solid var(--hour)}
+.feedback .big{font-family:var(--display);font-weight:600;font-size:24px;display:block}
+.feedback p{margin:6px 0 0}
+@media (prefers-reduced-motion:no-preference){.feedback.good.show{animation:pop .35s ease-out}}
+@keyframes pop{0%{transform:scale(.95)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+.score{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:700;color:var(--muted)}
+.bar{flex:1;min-width:120px;height:12px;border-radius:6px;background:var(--paper);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--star);border-radius:6px;transition:width .3s}
+.speak{border:2px solid var(--line);background:#fff;border-radius:999px;padding:4px 14px;font-weight:700;font-size:15px}
+
+.choose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:620px){.choose-grid{grid-template-columns:1fr 1fr}}
+.opt{background:#fff;border:3px solid var(--line);border-radius:18px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.opt .clock-wrap{width:100%}
+.opt .tag{font-weight:800;font-size:15px;min-height:22px}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);opacity:.8}
+.opt:disabled{cursor:default}
+
+.tools{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.toggle input{width:20px;height:20px;accent-color:var(--minute)}
+.parents{font-size:16px;color:var(--muted)}
+.parents h3{font-family:var(--display);font-weight:600;font-size:19px;color:var(--ink);margin:0 0 6px}
+.parents ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;max-width:75ch}
+.linkbtn{background:none;border:none;color:var(--muted);text-decoration:underline;padding:0;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Uhr lesen lernen: <span class="h">digital</span> → <span class="m">analog</span></h1>
+    <div class="legend" aria-label="Farben">
+      <span class="lh h"><i></i>kurzer Zeiger = Stunden</span>
+      <span class="lm m"><i></i>langer Zeiger = Minuten</span>
+    </div>
+  </header>
+
+  <nav class="levels" id="levels" aria-label="Level"></nav>
+
+  <div class="tools">
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-mode="learn" id="tab-learn">Erklärung</button>
+      <button class="tab" role="tab" data-mode="set" id="tab-set">Stell die Uhr</button>
+      <button class="tab" role="tab" data-mode="choose" id="tab-choose">Welche Uhr passt?</button>
+    </div>
+    <label class="toggle" for="ringToggle"><input type="checkbox" id="ringToggle" checked> rote Minuten-Zahlen am Rand</label>
+  </div>
+
+  <main id="main"></main>
+
+  <section class="card parents">
+    <h3>Für Eltern</h3>
+    <ul>
+      <li>Lieber täglich 5–10 Minuten als einmal pro Woche lange. Ein Level gilt als geschafft bei 10 richtigen Aufgaben (3 Sterne).</li>
+      <li>Reihenfolge: erst Volle Stunden, dann Halbe, Viertel, 5-Minuten, einzelne Minuten, zuletzt 24 Stunden. Zurückspringen ist ausdrücklich erlaubt.</li>
+      <li>Die Farben sind der Kern: Die <b class="h">Stunde</b> ist auf der Digitalanzeige und am kurzen Zeiger blau, die <b class="m">Minuten</b> rot. Später die roten Randzahlen ausschalten.</li>
+      <li>Typische Stolperstelle: Bei z.&nbsp;B. 7:45 steht der kurze Zeiger schon fast auf der 8. Die Uhr hier bewegt den kurzen Zeiger realistisch mit, damit genau das sichtbar wird.</li>
+      <li>Im Alltag üben: „Wie spät ist es?“ an einer echten Zeigeruhr fragen und die Digitalzeit vom Handy daneben halten.</li>
+    </ul>
+    <p style="margin:10px 0 0"><button class="linkbtn" id="resetBtn">Fortschritt zurücksetzen</button></p>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const $ = (s, r = document) => r.querySelector(s);
+const mod = (a, n) => ((a % n) + n) % n;
+const pad2 = n => String(n).padStart(2, "0");
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const GOAL = 10;
+
+const LEVELS = [
+  { id: 1, name: "Volle Stunden", step: 60 },
+  { id: 2, name: "Halbe Stunden", step: 30 },
+  { id: 3, name: "Viertel­stunden", step: 15 },
+  { id: 4, name: "5-Minuten", step: 5 },
+  { id: 5, name: "Jede Minute", step: 1 },
+  { id: 6, name: "24 Stunden", step: 5 },
+];
+
+/* ---------- Sprache ---------- */
+const HW = ["zwölf","eins","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn","elf","zwölf"];
+const NUMW = ["null","eine","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn","elf","zwölf","dreizehn","vierzehn","fünfzehn","sechzehn","siebzehn","achtzehn","neunzehn","zwanzig","einundzwanzig","zweiundzwanzig","dreiundzwanzig","vierundzwanzig"];
+const h12 = h24 => (h24 % 12) || 12;
+function minWord(n){ if (n === 1) return "eine Minute"; return n % 5 === 0 ? NUMW[n] : NUMW[n] + " Minuten"; }
+function phrase(h24, m){
+  const h = h12(h24), nx = (h % 12) + 1;
+  if (m === 0) return (h === 1 ? "ein" : HW[h]) + " Uhr";
+  if (m === 15) return "Viertel nach " + HW[h];
+  if (m === 30) return "halb " + HW[nx];
+  if (m === 45) return "Viertel vor " + HW[nx];
+  if (m < 25) return minWord(m) + " nach " + HW[h];
+  if (m < 30) return minWord(30 - m) + " vor halb " + HW[nx];
+  if (m <= 35) return minWord(m - 30) + " nach halb " + HW[nx];
+  return minWord(60 - m) + " vor " + HW[nx];
+}
+function dayPart(h24){
+  if (h24 < 5) return "nachts"; if (h24 < 10) return "morgens"; if (h24 < 12) return "vormittags";
+  if (h24 < 14) return "mittags"; if (h24 < 18) return "nachmittags"; if (h24 < 22) return "abends"; return "nachts";
+}
+function digHTML(h, m, lead){ return `<span class="dig"><span class="h">${lead ? pad2(h) : h}</span>:<span class="m">${pad2(m)}</span></span>`; }
+function speak(text){
+  try { const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE"; u.rate = 0.9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
+}
+const canSpeak = "speechSynthesis" in window;
+
+/* ---------- Hinweise ---------- */
+function minuteHint(m){
+  if (m === 0) return `Bei <b class="m">:00</b> zeigt der lange rote Zeiger ganz nach oben auf die 12.`;
+  if (m % 5 === 0) {
+    const n = m / 5;
+    return `<b class="m">${m}</b> Minuten: ${m} : 5 = ${n} → der lange rote Zeiger zeigt auf die <b class="m">${n}</b>${m === 30 ? " (ganz unten)" : ""}.`;
+  }
+  const base = Math.floor(m / 5), rest = m - base * 5, up = base + 1;
+  if (rest <= 2 || base === 0)
+    return `<b class="m">${m}</b> Minuten: ${base === 0 ? "von der 12" : `erst zur ${base} (= ${base * 5} Minuten)`}, dann noch ${rest} kleine${rest === 1 ? "n" : ""} Strich${rest === 1 ? "" : "e"} weiter.`;
+  return `<b class="m">${m}</b> Minuten: zur ${up === 12 ? 12 : up} (= ${up * 5} Minuten), dann ${5 - rest} kleine${5 - rest === 1 ? "n" : ""} Strich${5 - rest === 1 ? "" : "e"} zurück.`;
+}
+function hourHint(h24, m){
+  const h = h12(h24), nx = (h % 12) + 1;
+  if (m === 0) return `Der kurze blaue Zeiger zeigt genau auf die <b class="h">${h}</b>.`;
+  if (m < 30) return `Der kurze blaue Zeiger steht bei der <b class="h">${h}</b> – ein kleines Stück Richtung ${nx}.`;
+  if (m === 30) return `Der kurze blaue Zeiger steht genau zwischen der <b class="h">${h}</b> und der ${nx}.`;
+  return `Der kurze blaue Zeiger ist schon fast bei der ${nx}, hat sie aber noch nicht erreicht. Er gehört zur <b class="h">${h}</b>.`;
+}
+function convHint(h24){
+  if (h24 === 0) return `<b class="h">0</b> Uhr ist Mitternacht → auf der Uhr ist das die <b class="h">12</b>.`;
+  if (h24 === 12) return `<b class="h">12</b> Uhr ist mittags → auf der Uhr die <b class="h">12</b>.`;
+  if (h24 > 12) return `Erst umrechnen: <b class="h">${h24} − 12 = ${h24 - 12}</b>. Die Minuten bleiben gleich.`;
+  return `Vor 12 Uhr musst du nichts umrechnen.`;
+}
+
+/* ---------- Analoge Uhr ---------- */
+function svgEl(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function makeClock(host, opts = {}){
+  const svg = svgEl("svg", { viewBox: "-132 -132 264 264", class: "clock" + (opts.interactive ? " interactive" : ""), role: "img", "aria-label": "Analoge Uhr" });
+  svgEl("circle", { r: 129, class: "ring-band" }, svg);
+  svgEl("circle", { r: 102, class: "face" }, svg);
+  for (let i = 0; i < 60; i++) {
+    const a = i * 6 * Math.PI / 180, major = i % 5 === 0, r1 = major ? 88 : 94, r2 = 99;
+    svgEl("line", { x1: Math.sin(a) * r1, y1: -Math.cos(a) * r1, x2: Math.sin(a) * r2, y2: -Math.cos(a) * r2, class: major ? "tick major" : "tick" }, svg);
+  }
+  for (let n = 1; n <= 12; n++) {
+    const a = n * 30 * Math.PI / 180;
+    svgEl("text", { x: Math.sin(a) * 72, y: -Math.cos(a) * 72, class: "hnum" }, svg).textContent = n;
+  }
+  const ring = svgEl("g", { class: "mring" }, svg);
+  for (let i = 0; i < 12; i++) {
+    const a = i * 30 * Math.PI / 180;
+    svgEl("text", { x: Math.sin(a) * 116, y: -Math.cos(a) * 116, class: "mnum" }, ring).textContent = pad2(i * 5);
+  }
+  const hourG = svgEl("g", { class: "hand hour" }, svg);
+  svgEl("line", { x1: 0, y1: 14, x2: 0, y2: -52, class: "hand-line" }, hourG);
+  svgEl("line", { x1: 0, y1: 0, x2: 0, y2: -58, class: "hit", "data-hand": "hour" }, hourG);
+  const minG = svgEl("g", { class: "hand minute" }, svg);
+  svgEl("line", { x1: 0, y1: 18, x2: 0, y2: -90, class: "hand-line" }, minG);
+  svgEl("line", { x1: 0, y1: 20, x2: 0, y2: -96, class: "hit", "data-hand": "minute" }, minG);
+  svgEl("circle", { r: 7.5, class: "hub" }, svg);
+  svgEl("circle", { r: 2.5, class: "hub-dot" }, svg);
+  host.appendChild(svg);
+
+  const api = { T: 0, step: 5, onChange: null, svg };
+  let anim = null;
+  function draw(){ const T = mod(api.T, 720); hourG.setAttribute("transform", `rotate(${T / 2})`); minG.setAttribute("transform", `rotate(${mod(T, 60) * 6})`); }
+  api.set = (T, silent) => { if (anim) { cancelAnimationFrame(anim); anim = null; } api.T = mod(Math.round(T), 720); draw(); if (!silent && api.onChange) api.onChange(api.T); };
+  api.ring = on => svg.classList.toggle("no-ring", !on);
+  api.animateTo = (target, done) => {
+    target = mod(target, 720);
+    if (reduceMotion) { api.set(target); done && done(); return; }
+    const from = api.T; let d = mod(target - from, 720); if (d > 360) d -= 720;
+    const t0 = performance.now(), dur = 900;
+    const tick = now => {
+      const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      api.T = mod(from + d * e, 720); draw();
+      if (k < 1) anim = requestAnimationFrame(tick); else { anim = null; api.T = target; draw(); api.onChange && api.onChange(target); done && done(); }
+    };
+    anim = requestAnimationFrame(tick);
+  };
+
+  if (opts.interactive) {
+    const angDiff = (a, b) => { const d = mod(a - b, 360); return d > 180 ? 360 - d : d; };
+    const polar = e => {
+      const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+      const q = p.matrixTransform(svg.getScreenCTM().inverse());
+      return { ang: mod(Math.atan2(q.x, -q.y) * 180 / Math.PI, 360), r: Math.hypot(q.x, q.y) };
+    };
+    let drag = null;
+    const move = ang => {
+      if (drag.hand === "minute") {
+        let d = mod(ang - drag.prev, 360); if (d > 180) d -= 360;
+        drag.raw += d / 6; drag.prev = ang;
+        api.set(Math.round(drag.raw / api.step) * api.step);
+      } else {
+        const m = mod(api.T, 60); let best = 0, bd = 999;
+        for (let h = 0; h < 12; h++) { const dd = angDiff(ang, h * 30 + m * 0.5); if (dd < bd) { bd = dd; best = h; } }
+        api.set(best * 60 + m);
+      }
+    };
+    svg.addEventListener("pointerdown", e => {
+      const { ang, r } = polar(e);
+      let hand = e.target.getAttribute && e.target.getAttribute("data-hand");
+      if (!hand) {
+        const T = mod(api.T, 720), dh = angDiff(ang, T / 2), dm = angDiff(ang, mod(T, 60) * 6);
+        hand = r >= 66 ? "minute" : (dh - 20 < dm ? "hour" : "minute");
+      }
+      drag = { hand, raw: api.T, prev: mod(api.T, 60) * 6, id: e.pointerId };
+      try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+      svg.classList.add("drag-" + hand);
+      move(ang); e.preventDefault();
+    });
+    svg.addEventListener("pointermove", e => { if (drag && e.pointerId === drag.id) move(polar(e).ang); });
+    const end = () => { if (drag) { svg.classList.remove("drag-" + drag.hand); drag = null; } };
+    svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
+  }
+  draw();
+  return api;
+}
+
+/* ---------- Zustand ---------- */
+const STORE = "uhr-lernen-v1";
+const state = { level: 1, mode: "learn", ring: true, progress: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, task: null, tries: 0, solved: false, shown: false, learn24: null };
+try { const s = JSON.parse(localStorage.getItem(STORE) || "null"); if (s) { Object.assign(state.progress, s.progress || {}); state.level = s.level || 1; state.ring = s.ring !== false; } } catch (e) {}
+function save(){ try { localStorage.setItem(STORE, JSON.stringify({ progress: state.progress, level: state.level, ring: state.ring })); } catch (e) {} }
+const L = () => LEVELS[state.level - 1];
+const starsFor = n => n >= 10 ? 3 : n >= 6 ? 2 : n >= 3 ? 1 : 0;
+const starStr = n => { const s = starsFor(n); return "<b>" + "★".repeat(s) + "</b>" + "★".repeat(3 - s); };
+
+/* ---------- Aufgaben ---------- */
+function newTask(){
+  const lv = state.level; let h, m;
+  const prev = state.task;
+  for (let k = 0; k < 20; k++) {
+    h = rnd(1, 12);
+    if (lv === 1) m = 0;
+    else if (lv === 2) m = Math.random() < .75 ? 30 : 0;
+    else if (lv === 3) m = pick([15, 45, 15, 45, 30, 0]);
+    else if (lv === 4) m = 5 * rnd(1, 11);
+    else if (lv === 5) { m = rnd(1, 59); if (m % 5 === 0 && Math.random() < .7) m = mod(m + rnd(1, 4), 60) || 7; }
+    else { const r = Math.random(); h = r < .8 ? rnd(13, 23) : r < .9 ? 0 : rnd(6, 12); m = 5 * rnd(0, 11); }
+    if (!prev || prev.h !== h || prev.m !== m) break;
+  }
+  state.task = { h, m, T: (h % 12) * 60 + m };
+  state.tries = 0; state.solved = false; state.shown = false;
+}
+const lead24 = () => state.level === 6;
+function fmt12(T){ const h = Math.floor(T / 60) % 12 || 12; return digHTML(h, T % 60); }
+
+/* ---------- Lerninhalte ---------- */
+const LEARN = {
+  1: { title: "Volle Stunden", steps: [
+      `Die Uhr hat zwei Zeiger. Der <b class="h">kurze blaue Zeiger</b> zeigt die <b class="h">Stunde</b>. Der <b class="m">lange rote Zeiger</b> zeigt die <b class="m">Minuten</b>.`,
+      `Die Digitaluhr hat dieselben Farben: vorne die <b class="h">Stunde</b>, hinter dem Doppelpunkt die <b class="m">Minuten</b>: ${digHTML(7, 0)}`,
+      `Bei <b class="m">:00</b> ist eine volle Stunde. Dann zeigt der lange rote Zeiger immer ganz nach oben auf die 12.`,
+      `Der kurze blaue Zeiger zeigt genau auf die Stunde. ${digHTML(7, 0)} → kurzer Zeiger auf die <b class="h">7</b>. Man sagt „sieben Uhr“.`],
+    ex: [[3, 0], [7, 0], [9, 0], [12, 0]] },
+  2: { title: "Halbe Stunden", steps: [
+      `<b class="m">:30</b> heißt: 30 Minuten sind vorbei, also eine halbe Stunde. Der lange rote Zeiger hat eine halbe Runde gemacht und zeigt nach unten auf die 6.`,
+      `Der kurze blaue Zeiger wandert langsam mit. Nach einer halben Stunde steht er genau in der Mitte: bei ${digHTML(7, 30)} zwischen der 7 und der 8.`,
+      `Man sagt dazu „halb acht“, weil die Uhr schon halb auf dem Weg zur 8 ist. Achtung: Gesagt wird die nächste Stunde, auf der Digitaluhr steht aber noch die <b class="h">7</b>.`],
+    ex: [[7, 30], [2, 30], [11, 30], [4, 0]] },
+  3: { title: "Viertelstunden", steps: [
+      `Eine Stunde ist eine ganze Runde des langen Zeigers. Ein Viertel der Runde sind 15 Minuten.`,
+      `<b class="m">:15</b> → der lange rote Zeiger zeigt auf die 3. Man sagt „Viertel nach sieben“ (${digHTML(7, 15)}).`,
+      `<b class="m">:45</b> → der lange rote Zeiger zeigt auf die 9. Es fehlt nur noch ein Viertel bis zur vollen Stunde: „Viertel vor acht“ (${digHTML(7, 45)}).`,
+      `Achtung bei ${digHTML(7, 45)}: Der kurze blaue Zeiger ist schon fast bei der 8, hat sie aber noch nicht erreicht. Darum steht auf der Digitaluhr noch die <b class="h">7</b>.`],
+    ex: [[7, 15], [7, 45], [3, 15], [10, 45]] },
+  4: { title: "5-Minuten-Schritte", steps: [
+      `Von einer Zahl zur nächsten braucht der lange rote Zeiger 5 Minuten. Die roten Zahlen am Rand zeigen dir die Minuten: bei der 1 → <b class="m">05</b>, bei der 2 → <b class="m">10</b>, bei der 3 → <b class="m">15</b> …`,
+      `Trick: Minuten geteilt durch 5 ergibt die Zahl, auf die der lange Zeiger zeigt. ${digHTML(7, 20)} → 20 : 5 = 4 → langer Zeiger auf die <b class="m">4</b>.`,
+      `Der kurze blaue Zeiger steht bei der Stunde von der Digitaluhr. Je mehr Minuten, desto weiter ist er schon zur nächsten Zahl gerutscht.`,
+      `So sagt man es: ${digHTML(7, 5)} „fünf nach sieben“, ${digHTML(7, 25)} „fünf vor halb acht“, ${digHTML(7, 35)} „fünf nach halb acht“, ${digHTML(7, 50)} „zehn vor acht“.`],
+    ex: [[7, 20], [7, 25], [7, 35], [7, 50]] },
+  5: { title: "Jede Minute", steps: [
+      `Zwischen zwei Zahlen sind 5 kleine Striche. Jeder Strich ist eine Minute.`,
+      `Erst die passende 5er-Zahl suchen, dann Striche weiterzählen: ${digHTML(7, 23)} → zur 4 (20 Minuten), dann noch 3 Striche weiter.`,
+      `Manchmal geht es rückwärts schneller: ${digHTML(7, 29)} → zur 6 (30 Minuten), dann 1 Strich zurück.`],
+    ex: [[7, 23], [2, 8], [9, 41], [5, 57]] },
+  6: { title: "24 Stunden", steps: [
+      `Ein Tag hat 24 Stunden, die Uhr hat aber nur 12 Zahlen. Der kurze blaue Zeiger läuft deshalb zweimal am Tag rund: einmal bis mittags, einmal bis Mitternacht.`,
+      `Ab 13 Uhr rechnest du minus 12: ${digHTML(14, 30)} → 14 − 12 = 2 → die Uhr zeigt halb drei (nachmittags).`,
+      `Die Minuten bleiben genau gleich. Nur die Stunde wird umgerechnet.`,
+      `${digHTML(0, 0, true)} ist Mitternacht. Der kurze Zeiger steht dann auf der 12.`],
+    ex: [[14, 30], [19, 0], [21, 45], [0, 15]], table: true },
+};
+
+/* ---------- Rendern ---------- */
+const main = $("#main");
+let clock = null;
+
+function renderLevels(){
+  $("#levels").innerHTML = LEVELS.map(l =>
+    `<button class="lvl" data-level="${l.id}" aria-pressed="${l.id === state.level}">
+      <span class="num">Level ${l.id}</span><span class="nm">${l.name}</span>
+      <span class="st" aria-label="${starsFor(state.progress[l.id])} von 3 Sternen">${starStr(state.progress[l.id])}</span></button>`).join("");
+}
+function renderTabs(){ document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.mode === state.mode))); }
+function adjustHTML(){
+  return `<div class="adjust">
+    <div class="grp h">Stunde <button data-adj="h-" aria-label="Stunde zurück">−</button><button data-adj="h+" aria-label="Stunde vor">+</button></div>
+    <div class="grp m">Minuten <button data-adj="m-" aria-label="Minuten zurück">−</button><button data-adj="m+" aria-label="Minuten vor">+</button></div>
+  </div><p class="drag-tip">Du kannst die Zeiger auch mit dem Finger oder der Maus ziehen.</p>`;
+}
+function bindAdjust(){
+  main.querySelectorAll("[data-adj]").forEach(b => b.addEventListener("click", () => {
+    const k = b.dataset.adj, st = L().step;
+    if (k === "h+") clock.set(clock.T + 60); if (k === "h-") clock.set(clock.T - 60);
+    if (k === "m+") clock.set(clock.T + st); if (k === "m-") clock.set(clock.T - st);
+  }));
+}
+function scoreHTML(){
+  const n = state.progress[state.level];
+  return `<div class="score"><span>Richtig in Level ${state.level}: ${Math.min(n, GOAL)} / ${GOAL}</span><span class="bar"><i style="width:${Math.min(100, n / GOAL * 100)}%"></i></span><span class="st" style="color:var(--line);font-size:20px">${starStr(n)}</span></div>`;
+}
+
+function renderLearn(){
+  const c = LEARN[state.level];
+  const table = c.table ? `<div><div class="label" style="margin-bottom:6px">Umrechnen</div><div class="table24">${
+    [13,14,15,16,17,18,19,20,21,22,23,0].map(h => `<div>${digHTML(h, 0, true).replace('class="dig"','class="dig"')} → <b class="h">${h12(h)}</b></div>`).join("")}</div></div>` : "";
+  main.innerHTML = `<section class="stage">
+    <div class="card clock-col">
+      <div class="clock-wrap" id="clockHost"></div>
+      ${adjustHTML()}
+      <div class="readout">
+        <div class="digital-box small" id="liveDig"></div>
+        <div class="phrase" id="livePhrase"></div>
+        <div class="alt" id="liveAlt"></div>
+        ${canSpeak ? `<button class="speak" id="speakBtn">Vorlesen</button>` : ""}
+      </div>
+    </div>
+    <div class="card panel">
+      <div class="label">Level ${state.level} · Erklärung</div>
+      <h2>${c.title}</h2>
+      <ol class="steps">${c.steps.map(s => `<li><span>${s}</span></li>`).join("")}</ol>
+      ${table}
+      <div><div class="label" style="margin-bottom:6px">Antippen und auf der Uhr ansehen</div>
+        <div class="chips">${c.ex.map(([h, m], i) => `<button class="chip" data-ex="${i}">${digHTML(h, m, state.level === 6)}</button>`).join("")}</div></div>
+      <div class="actions"><button class="btn next" data-goto="set">Jetzt üben →</button></div>
+    </div></section>`;
+  clock = makeClock($("#clockHost"), { interactive: true });
+  clock.step = L().step; clock.ring(state.ring);
+  const upd = () => {
+    const T = clock.T, h = Math.floor(T / 60) % 12 || 12, m = T % 60;
+    let h24 = state.learn24 !== null ? state.learn24 : h;
+    $("#liveDig").innerHTML = digHTML(state.level === 6 ? h24 : h, m, state.level === 6);
+    const dp = state.level === 6 ? " (" + dayPart(h24) + ")" : "";
+    $("#livePhrase").textContent = phrase(h24, m) + dp;
+    const other = h === 12 ? 0 : h + 12;
+    $("#liveAlt").innerHTML = state.level === 6
+      ? (state.learn24 !== null ? `Auf der Uhr: ${fmt12(T)}` : `oder am Nachmittag/Abend: ${digHTML(other, m, true)}`)
+      : "";
+  };
+  clock.onChange = () => { state.learn24 = null; main.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", "false")); upd(); };
+  const [eh, em] = c.ex[0];
+  state.learn24 = state.level === 6 ? eh : null;
+  clock.set((eh % 12) * 60 + em, true); upd();
+  main.querySelector('.chip[data-ex="0"]').setAttribute("aria-pressed", "true");
+  main.querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => {
+    const [h, m] = c.ex[+b.dataset.ex];
+    main.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    clock.animateTo((h % 12) * 60 + m, () => { state.learn24 = state.level === 6 ? h : null; upd(); });
+    state.learn24 = state.level === 6 ? h : null;
+  }));
+  const sb = $("#speakBtn"); if (sb) sb.addEventListener("click", () => speak("Es ist " + $("#livePhrase").textContent));
+  bindAdjust();
+}
+
+function taskHeader(label){
+  const t = state.task;
+  return `<div class="task"><div class="label">${label}</div>
+    <div class="digital-box">${digHTML(t.h, t.m, lead24())}</div>
+    ${state.level === 6 ? `<span class="daypart">${dayPart(t.h)}</span>` : ""}</div>`;
+}
+function feedback(kind, html){ const f = $("#fb"); f.className = "feedback show " + kind; f.innerHTML = html; }
+const PRAISE = ["Super!", "Klasse!", "Genau richtig!", "Stark!", "Richtig!", "Prima!"];
+function successHTML(extra){
+  const t = state.task, n = state.progress[state.level];
+  let s = `<span class="big">${pick(PRAISE)}</span><p>${digHTML(t.h, t.m, lead24())} sagt man: <b>„${phrase(t.h, t.m)}“</b>${state.level === 6 ? " (" + dayPart(t.h) + ")" : ""}.</p>`;
+  if (extra) s += `<p>${extra}</p>`;
+  if (n === GOAL) s += `<p><b>Level ${state.level} geschafft – 3 Sterne!</b>${state.level < 6 ? ` <button class="btn next" data-nextlevel style="margin-top:8px">Weiter zu Level ${state.level + 1}</button>` : ""}</p>`;
+  return s;
+}
+function award(){ state.progress[state.level]++; save(); renderLevels(); $("#scoreBox").innerHTML = scoreHTML(); }
+
+function renderSet(){
+  if (!state.task) newTask();
+  main.innerHTML = `<section class="stage">
+    <div class="card clock-col"><div class="clock-wrap" id="clockHost"></div>${adjustHTML()}</div>
+    <div class="card panel">
+      ${taskHeader("Stell die Uhr auf")}
+      <div class="actions">
+        <button class="btn primary" id="checkBtn">Prüfen</button>
+        <button class="btn" id="hintBtn">Tipp</button>
+        <button class="btn" id="solveBtn" hidden>Lösung zeigen</button>
+        <button class="btn next" id="nextBtn" hidden>Nächste Aufgabe →</button>
+      </div>
+      <div class="feedback" id="fb" aria-live="polite"></div>
+      <div id="scoreBox">${scoreHTML()}</div>
+    </div></section>`;
+  clock = makeClock($("#clockHost"), { interactive: true });
+  clock.step = L().step; clock.ring(state.ring);
+  clock.set(state.task.T === 0 ? 180 : 0, true);
+  bindAdjust();
+  const t = state.task;
+  const finish = () => { $("#checkBtn").hidden = true; $("#hintBtn").hidden = true; $("#solveBtn").hidden = true; $("#nextBtn").hidden = false; $("#nextBtn").focus(); };
+  $("#checkBtn").addEventListener("click", () => {
+    if (state.solved) return;
+    const T = clock.T, cm = T % 60, ch = Math.floor(T / 60) % 12, th = Math.floor(t.T / 60) % 12;
+    if (T === t.T) {
+      state.solved = true;
+      if (!state.shown) award();
+      feedback("good", successHTML());
+      finish(); return;
+    }
+    state.tries++;
+    let msg;
+    if (t.m % 5 === 0 && cm === (th * 5) % 60 && ch === (t.m / 5) % 12 && t.m !== (th * 5) % 60)
+      msg = `<span class="big">Fast – die Zeiger sind vertauscht!</span><p>Der <b class="h">kurze blaue</b> Zeiger zeigt die Stunde, der <b class="m">lange rote</b> die Minuten.</p>`;
+    else if (cm === t.m)
+      msg = `<span class="big">Der lange rote Zeiger stimmt schon.</span><p>Schau noch auf den kurzen blauen Zeiger: ${hourHint(t.h, t.m)}${state.level === 6 ? " " + convHint(t.h) : ""}</p>`;
+    else if (ch === th)
+      msg = `<span class="big">Der kurze blaue Zeiger stimmt.</span><p>Jetzt noch der lange rote Zeiger: ${minuteHint(t.m)}</p>`;
+    else
+      msg = `<span class="big">Noch nicht ganz.</span><p>Fang mit dem langen roten Zeiger an: ${minuteHint(t.m)}</p>`;
+    feedback("bad", msg);
+    if (state.tries >= 2) $("#solveBtn").hidden = false;
+  });
+  $("#hintBtn").addEventListener("click", () => {
+    let s = "";
+    if (state.level === 6) s += `<p>${convHint(t.h)}</p>`;
+    s += `<p>${minuteHint(t.m)}</p><p>${hourHint(t.h, t.m)}</p>`;
+    feedback("info", `<span class="big">Tipp</span>${s}`);
+  });
+  $("#solveBtn").addEventListener("click", () => {
+    state.shown = true;
+    clock.animateTo(t.T, () => {
+      state.solved = true;
+      feedback("info", `<span class="big">So sieht ${digHTML(t.h, t.m, lead24())} aus.</span><p>Man sagt „${phrase(t.h, t.m)}“. Schau dir die beiden Zeiger genau an – die nächste schaffst du!</p>`);
+      finish();
+    });
+  });
+  $("#nextBtn").addEventListener("click", () => { newTask(); renderSet(); });
+}
+
+function renderChoose(){
+  if (!state.task) newTask();
+  const t = state.task, h = t.h % 12, m = t.m;
+  const cand = [];
+  const swap = m % 5 === 0 ? ((m / 5) % 12) * 60 + mod(h * 5, 60) : null;
+  const next = mod(h + 1, 12) * 60 + m, prev = mod(h - 1, 12) * 60 + m;
+  const mirror = h * 60 + mod(60 - m, 60);
+  const shift = h * 60 + mod(m + pick([-1, 1]) * Math.max(5, L().step) * rnd(1, 2), 60);
+  [swap, m >= 30 ? next : prev, mirror, shift, m >= 30 ? prev : next, mod(h + 3, 12) * 60 + m].forEach(x => {
+    if (x !== null && x !== t.T && !cand.includes(x)) cand.push(x);
+  });
+  const first = cand.slice(0, 3).sort(() => Math.random() - .5);
+  const opts = [t.T, first[0], first[1]].sort(() => Math.random() - .5);
+  state.options = opts;
+  main.innerHTML = `<section class="card panel">
+    ${taskHeader("Welche Uhr zeigt diese Zeit?")}
+    <div class="choose-grid">${opts.map((T, i) => `<button class="opt" data-i="${i}" aria-label="Uhr ${i + 1}"><div class="clock-wrap" id="oc${i}"></div><span class="tag" id="tag${i}"></span></button>`).join("")}</div>
+    <div class="feedback" id="fb" aria-live="polite"></div>
+    <div class="actions"><button class="btn next" id="nextBtn" hidden>Nächste Aufgabe →</button></div>
+    <div id="scoreBox">${scoreHTML()}</div></section>`;
+  opts.forEach((T, i) => { const c = makeClock($("#oc" + i)); c.ring(state.ring); c.set(T, true); });
+  main.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+    if (state.solved) return;
+    const i = +b.dataset.i, T = opts[i];
+    if (T === t.T) {
+      state.solved = true; b.classList.add("right");
+      $("#tag" + i).textContent = "Richtig!";
+      main.querySelectorAll(".opt").forEach(x => x.disabled = true);
+      if (state.tries === 0) award();
+      feedback("good", successHTML(state.tries ? "Beim nächsten Mal klappt es gleich beim ersten Versuch!" : ""));
+      $("#nextBtn").hidden = false; $("#nextBtn").focus();
+    } else {
+      state.tries++; b.classList.add("wrong"); b.disabled = true;
+      $("#tag" + i).innerHTML = "zeigt " + fmt12(T);
+      const tm = T % 60;
+      const why = tm !== t.m ? minuteHint(t.m) : hourHint(t.h, t.m);
+      feedback("bad", `<span class="big">Diese Uhr zeigt ${fmt12(T)}.</span><p>${state.level === 6 && t.h > 12 ? convHint(t.h) + " " : ""}${why}</p>`);
+    }
+  }));
+  $("#nextBtn").addEventListener("click", () => { newTask(); renderChoose(); });
+}
+
+function render(){
+  renderLevels(); renderTabs();
+  if (state.mode === "learn") renderLearn();
+  else if (state.mode === "set") renderSet();
+  else renderChoose();
+}
+
+/* ---------- Ereignisse ---------- */
+$("#levels").addEventListener("click", e => {
+  const b = e.target.closest(".lvl"); if (!b) return;
+  state.level = +b.dataset.level; state.task = null; state.mode = "learn"; save(); render();
+});
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  state.mode = b.dataset.mode; state.task = null; render();
+});
+main.addEventListener("click", e => {
+  const g = e.target.closest("[data-goto]"); if (g) { state.mode = g.dataset.goto; state.task = null; render(); return; }
+  if (e.target.closest("[data-nextlevel]")) { state.level = Math.min(6, state.level + 1); state.mode = "learn"; state.task = null; save(); render(); }
+});
+const rt = $("#ringToggle"); rt.checked = state.ring;
+rt.addEventListener("change", () => { state.ring = rt.checked; save(); document.querySelectorAll("svg.clock").forEach(s => s.classList.toggle("no-ring", !state.ring)); });
+const rb = $("#resetBtn"); let armed = false;
+rb.addEventListener("click", () => {
+  if (!armed) { armed = true; rb.textContent = "Wirklich alle Sterne löschen? Nochmal klicken."; setTimeout(() => { armed = false; rb.textContent = "Fortschritt zurücksetzen"; }, 4000); return; }
+  for (const k in state.progress) state.progress[k] = 0; armed = false; rb.textContent = "Fortschritt zurückgesetzt."; save(); render();
+});
+render();
+})();
+</script>
+</body>
+</html>
